@@ -21,7 +21,7 @@ public:
     ~EditorCliente();
 
     void start(QString address, quint16 port);
-    void sendMessage();
+    void sendMessage(char *operacion);
     QTcpSocket client;
 
 public slots:

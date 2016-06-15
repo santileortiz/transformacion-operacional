@@ -30,5 +30,6 @@ void Server::startRead()
   char buffer[1024] = {0};
   client->read(buffer, client->bytesAvailable());
   cout << buffer << endl;
-  client->close();
+  client->write(buffer, strlen(buffer));
+  //client->close();
 }

@@ -1,5 +1,5 @@
 #include "editor_client.h"
-
+#include <stdlib.h>
 
 #include <QString>
 #include <iostream>
@@ -33,7 +33,14 @@ void EditorCliente::onTextChanged(){
     int cursor = m_textEdit.textCursor().positionInBlock() - 1;
 
     //QStringRef subString(tt, cursor, cursor+1);
-    char c = t[cursor].toLatin1();
+    char c[2] = "";
+    char operacion[256] = "";
+    char cursor_char[3];
+
+    c[0] = t[cursor].toLatin1();
+    //itoa(cursor, cursos_char, 10);
+    sprintf(cursor_char, "%d", cursor);
+
     //int i = QString("myTextHere")[0].unicode();
 
     //char c = t.at(cursor).toAscii();
@@ -41,7 +48,15 @@ void EditorCliente::onTextChanged(){
     cout << t.toStdString() << endl;
     //cout << "(" << cursor << ", " << tt.toStdString() << ")" << endl;
     cout << "(" << c << ", " << cursor << ")" << endl;
-    sendMessage();
+    //strcat(operacion, c);
+    if(cursor < 100) strcat(operacion, "0");
+    if(cursor < 10) strcat(operacion, "0");
+
+    strcat(operacion, cursor_char);
+
+    strcat(operacion, c);
+
+    sendMessage(operacion);
     //cliente.client.write("Hello, world", 13);
     //cout << cursor << endl;
 }
@@ -62,12 +77,17 @@ void EditorCliente::start(QString address, quint16 port)
 
 void EditorCliente::startTransfer()
 {
-printf("intento mandar un mensaje al servidor\n");
+//printf("intento mandar un mensaje al servidor\n");
   //client.write("Hello, world", 13);
 }
 
-void EditorCliente::sendMessage(){
-    printf("llamo a sendMessage\n");
+void EditorCliente::sendMessage(char *operacion){
+    printf("llamo a sendMessage %s\n", operacion);
 
-    client.write("Hola", 4);
+    client.write(operacion, strlen(operacion));
+    //client.write("hola", 4);
+    client.waitForReadyRead(-1);
+    //qDebug() << "Reading: " << client.bytesAvailable();
+    qDebug() << client.readAll();
+
 }
