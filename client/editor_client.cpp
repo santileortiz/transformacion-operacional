@@ -6,14 +6,32 @@
 
 using namespace std;
 
+struct Transform
+{
+    qint32 pos;
+    quint8 c;
+    qint32 priority;
+};
+
+QDataStream &operator<<(QDataStream &out, const Transform &transform)
+{
+    out << transform.pos << transform.c << transform.priority;
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, Transform &transform)
+{
+    in >> transform.pos >> transform.c >> transform.priority;
+    return in;
+}
+
 EditorCliente::EditorCliente(QWidget *parent)
     : QWidget(parent)
 {
-    connect(&client, SIGNAL(connected()), this, SLOT(startTransfer()));
     connect(&m_textEdit, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
     connect(&m_textEdit, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorPositionChanged()));
 
-    start("127.0.0.1", 8888);
+    start("127.0.0.1", 2345);
 
     m_layout.addWidget(&m_textEdit);
     m_layout.addWidget(&m_label);
@@ -22,72 +40,38 @@ EditorCliente::EditorCliente(QWidget *parent)
 }
 
 EditorCliente::~EditorCliente(){
-  client.close();
+  sock.close();
 }
 
 void EditorCliente::onTextChanged(){
+    Transform new_transform;
+
+    QByteArray block;
+    QDataStream sendStream(&block, QIODevice::ReadWrite);
+
     t = m_textEdit.toPlainText();
-    //QString tt;// = m_textEdit.toPlainText();
 
-    //char c;
-    int cursor = m_textEdit.textCursor().positionInBlock() - 1;
-
-    //QStringRef subString(tt, cursor, cursor+1);
-    char c[2] = "";
-    char operacion[256] = "";
-    char cursor_char[3];
-
-    c[0] = t[cursor].toLatin1();
-    //itoa(cursor, cursos_char, 10);
-    sprintf(cursor_char, "%d", cursor);
-
-    //int i = QString("myTextHere")[0].unicode();
-
-    //char c = t.at(cursor).toAscii();
+    new_transform.pos = m_textEdit.textCursor().positionInBlock() - 1;
+    new_transform.c = t[new_transform.pos].toLatin1();
+    new_transform.priority = 0;
+    sendStream << new_transform;
+    sock.write(block);
 
     cout << t.toStdString() << endl;
-    //cout << "(" << cursor << ", " << tt.toStdString() << ")" << endl;
-    cout << "(" << c << ", " << cursor << ")" << endl;
-    //strcat(operacion, c);
-    if(cursor < 100) strcat(operacion, "0");
-    if(cursor < 10) strcat(operacion, "0");
+    cout << "(" << new_transform.c << ", " << new_transform.pos << ")" << endl;
 
-    strcat(operacion, cursor_char);
-
-    strcat(operacion, c);
-
-    sendMessage(operacion);
-    //cliente.client.write("Hello, world", 13);
-    //cout << cursor << endl;
+    cout << "Tamaño:" ;
+    cout << block.size() << endl;
 }
 
 void EditorCliente::onCursorPositionChanged(){
-    // Code that executes on cursor change here
     m_cursor = m_textEdit.textCursor();
     m_label.setText(QString("Position: %1").arg(m_cursor.positionInBlock()));
-    //int cursor = m_cursor.positionInBlock();
-    //cout << "cursor: #" << cursor << endl;
 }
 
 void EditorCliente::start(QString address, quint16 port)
 {
   QHostAddress addr(address);
-  client.connectToHost(addr, port);
+  sock.connectToHost(addr, port);
 }
 
-void EditorCliente::startTransfer()
-{
-//printf("intento mandar un mensaje al servidor\n");
-  //client.write("Hello, world", 13);
-}
-
-void EditorCliente::sendMessage(char *operacion){
-    printf("llamo a sendMessage %s\n", operacion);
-
-    client.write(operacion, strlen(operacion));
-    //client.write("hola", 4);
-    client.waitForReadyRead(-1);
-    //qDebug() << "Reading: " << client.bytesAvailable();
-    qDebug() << client.readAll();
-
-}

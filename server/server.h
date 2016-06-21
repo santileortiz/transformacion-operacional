@@ -13,6 +13,7 @@ public slots:
   void acceptConnection();
   void startRead();
 private:
+  uint num_clients;
   QTcpServer server;
-  QTcpSocket* client;
+  QTcpSocket* clients[2];
 };

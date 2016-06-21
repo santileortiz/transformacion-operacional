@@ -22,10 +22,7 @@ public:
 
     void start(QString address, quint16 port);
     void sendMessage(char *operacion);
-    QTcpSocket client;
-
-public slots:
-  void startTransfer();
+    QTcpSocket sock;
 
 private slots:
     void onTextChanged();
