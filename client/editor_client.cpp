@@ -28,6 +28,7 @@ QDataStream &operator>>(QDataStream &in, Transform &transform)
 EditorCliente::EditorCliente(QWidget *parent)
     : QWidget(parent)
 {
+    writing_to_box = false;
     connect(&m_textEdit, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
     connect(&m_textEdit, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorPositionChanged()));
     //connect(&sock, SIGNAL(readyRead()), this, SLOT(m_read()));
@@ -37,7 +38,7 @@ EditorCliente::EditorCliente(QWidget *parent)
     m_cursor = m_textEdit.textCursor();
 
     QStringList args = QCoreApplication::arguments();
-    
+
     if (args.count() == 1) {
         m_label.setText(QString("Cliente 1"));
         start("127.0.0.1", 2345);
@@ -58,7 +59,7 @@ EditorCliente::~EditorCliente(){
 }
 
 void EditorCliente::onTextChanged(){
-    if (writing_to_box) 
+    if (writing_to_box)
         return;
 
     Transform new_transform;
