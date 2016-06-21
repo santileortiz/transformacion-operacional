@@ -1,4 +1,3 @@
-// main.cc
 #include "server.h"
 #include <QApplication>
 

@@ -4,13 +4,6 @@
 
 using namespace std;
 
-struct Transform
-{
-    qint32 pos;
-    quint8 c;
-    qint32 priority;
-};
-
 QDataStream &operator<<(QDataStream &out, const Transform &transform)
 {
     out << transform.pos << transform.c << transform.priority;
@@ -26,39 +19,80 @@ QDataStream &operator>>(QDataStream &in, Transform &transform)
 Server::Server(QObject* parent): QObject(parent)
 {
   num_clients = 0;
-  connect(&server, SIGNAL(newConnection()),
-    this, SLOT(acceptConnection()));
+  connect(&server1, SIGNAL(newConnection()),
+    this, SLOT(acceptConnection1()));
+  server1.listen(QHostAddress::Any, 2345);
 
-  server.listen(QHostAddress::Any, 2346);
+  connect(&server2, SIGNAL(newConnection()),
+    this, SLOT(acceptConnection2()));
+  server2.listen(QHostAddress::Any, 2346);
 }
 
 Server::~Server()
 {
-  server.close();
+  server1.close();
+  server2.close();
 }
 
-void Server::acceptConnection()
+void Server::acceptConnection1()
 {
-  clients[num_clients] = server.nextPendingConnection();
-  quint16 port = clients[num_clients]->localPort();
+  num_clients++;
+  clients[1] = server1.nextPendingConnection();
+  quint16 port = clients[1]->localPort();
   QString port_s = QString::number(port);
   cout << "Puerto: ";
   cout << port << endl;
 
-  connect(clients[num_clients], SIGNAL(readyRead()),
-    this, SLOT(startRead()));
-  num_clients++;
+  connect(clients[1], SIGNAL(readyRead()),
+    this, SLOT(read_from_client_1()));
 }
 
-void Server::startRead()
+void Server::acceptConnection2()
 {
-    cout << "Paquete recibido!"<< endl;
-    Transform transform;
-    QTcpSocket *tcpSocket = (QTcpSocket*)sender();
+  num_clients++;
+  clients[2] = server2.nextPendingConnection();
+  quint16 port = clients[2]->localPort();
+  QString port_s = QString::number(port);
+  cout << "Puerto: ";
+  cout << port << endl;
 
-    if (tcpSocket->bytesAvailable() < 9) {
-        return;
+  connect(clients[2], SIGNAL(readyRead()),
+    this, SLOT(read_from_client_2()));
+}
+
+void Server::write_to_client (Transform transform, int cli_number) {
+    QByteArray block;
+    QDataStream sendStream(&block, QIODevice::ReadWrite);
+    sendStream << transform;
+    clients[cli_number]->write(block);
+}
+
+Transform operat_transformation (Transform t1, Transform t2) {
+    Transform res;
+    res.c = t1.c;
+    res.priority = t1.priority;
+    if (t1.pos < t2.pos ||
+            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority<t2.priority)) {
+        res.pos = t1.pos;
+    } else if (t1.pos > t2.pos ||
+            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority>t2.priority)) {
+        res.pos = t1.pos+1;
+    } else {
+        res.priority = -1;
     }
+    return res;
+}
+
+void Server::read_from_client_1()
+{
+    if (num_clients !=2) 
+        return;
+
+    QTcpSocket *tcpSocket = (QTcpSocket*)sender();
+    Transform transform;
+
+    if (tcpSocket->bytesAvailable() < 9)
+        return;
 
     QByteArray block = tcpSocket->read(9);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
@@ -70,8 +104,31 @@ void Server::startRead()
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
 
-    //transform.pos = 1;
-    //sendStream << transform;
+    transform.priority = 1;
+    write_to_client (transform, 2);
+}
 
-    tcpSocket->write(block);
+void Server::read_from_client_2()
+{
+    if (num_clients !=2) 
+        return;
+
+    QTcpSocket *tcpSocket = (QTcpSocket*)sender();
+    Transform transform;
+
+    if (tcpSocket->bytesAvailable() < 9)
+        return;
+
+    QByteArray block = tcpSocket->read(9);
+    QDataStream sendStream(&block, QIODevice::ReadWrite);
+    sendStream >> transform;
+
+    cout << "Posicion: " ;
+    cout << transform.pos << endl;
+    cout << "Caracter: " ;
+    cout << transform.c << endl;
+    cout << "Prioridad: " << transform.priority << endl;
+
+    transform.priority = 1;
+    write_to_client (transform, 1);
 }

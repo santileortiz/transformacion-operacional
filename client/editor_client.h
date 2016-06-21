@@ -33,6 +33,7 @@ public slots:
     void m_read();
 
 private:
+    bool writing_to_box;
     QTextCursor m_cursor;
     QVBoxLayout m_layout;
     QTextEdit m_textEdit;
