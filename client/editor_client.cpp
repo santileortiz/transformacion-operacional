@@ -30,8 +30,12 @@ EditorCliente::EditorCliente(QWidget *parent)
 {
     connect(&m_textEdit, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
     connect(&m_textEdit, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorPositionChanged()));
+    //connect(&sock, SIGNAL(readyRead()), this, SLOT(m_read()));
+    //connect(&sock, SIGNAL(bytesWritten()), this, SLOT(m_read()));
+    connect(&sock, SIGNAL(readyRead()), this, SLOT(m_read()));
 
-    start("127.0.0.1", 2345);
+
+    start("127.0.0.1", 2346);
 
     m_layout.addWidget(&m_textEdit);
     m_layout.addWidget(&m_label);
@@ -45,6 +49,7 @@ EditorCliente::~EditorCliente(){
 
 void EditorCliente::onTextChanged(){
     Transform new_transform;
+    Transform transform;
 
     QByteArray block;
     QDataStream sendStream(&block, QIODevice::ReadWrite);
@@ -62,6 +67,24 @@ void EditorCliente::onTextChanged(){
 
     cout << "Tamaño:" ;
     cout << block.size() << endl;
+
+    QByteArray block2 = sock.read(9);
+    sock.waitForReadyRead(-1);
+    //m_textEdit.clear();
+    //m_textEdit.setText("Cominucado con el servidor");
+
+    QDataStream sendStream2(&block2, QIODevice::ReadWrite);
+    sendStream2 >> transform;
+    position = transform.pos;
+    caracter = transform.c;
+
+    cout << "Respuesta del servidor" << endl;
+    cout << "Posicion: " ;
+    cout << transform.pos << endl;
+    cout << "Caracter: " ;
+    cout << transform.c << endl;
+    cout << "Prioridad: " << transform.priority << endl;
+
 }
 
 void EditorCliente::onCursorPositionChanged(){
@@ -75,3 +98,15 @@ void EditorCliente::start(QString address, quint16 port)
   sock.connectToHost(addr, port);
 }
 
+void EditorCliente::m_read(/* arguments */) {
+    cout << "hola" << endl;
+    QString tmp;
+
+    tmp = t;
+
+    cout << "*****Caracter: " << caracter << endl;
+
+    tmp.append(caracter);
+
+    m_textEdit.setText(tmp);
+}

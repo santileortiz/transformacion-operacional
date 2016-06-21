@@ -29,7 +29,7 @@ Server::Server(QObject* parent): QObject(parent)
   connect(&server, SIGNAL(newConnection()),
     this, SLOT(acceptConnection()));
 
-  server.listen(QHostAddress::Any, 2345);
+  server.listen(QHostAddress::Any, 2346);
 }
 
 Server::~Server()
@@ -68,4 +68,10 @@ void Server::startRead()
     cout << transform.pos << endl;
     cout << "Caracter: " ;
     cout << transform.c << endl;
+    cout << "Prioridad: " << transform.priority << endl;
+
+    //transform.pos = 1;
+    //sendStream << transform;
+
+    tcpSocket->write(block);
 }

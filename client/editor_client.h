@@ -27,6 +27,10 @@ public:
 private slots:
     void onTextChanged();
     void onCursorPositionChanged();
+    //void m_read();
+
+public slots:
+    void m_read();
 
 private:
     QTextCursor m_cursor;
@@ -34,6 +38,8 @@ private:
     QTextEdit m_textEdit;
     QLabel m_label;
     QString t;
+    int position;
+    char caracter;
 };
 
 #endif // WIDGET_H
