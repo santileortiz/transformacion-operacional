@@ -19,6 +19,7 @@ QDataStream &operator>>(QDataStream &in, Transform &transform)
 Server::Server(QObject* parent): QObject(parent)
 {
   num_clients = 0;
+  num_transformaciones = 0;
   connect(&server1, SIGNAL(newConnection()),
     this, SLOT(acceptConnection1()));
   server1.listen(QHostAddress::Any, 2345);
@@ -67,7 +68,9 @@ void Server::write_to_client (Transform transform, int cli_number) {
     clients[cli_number]->write(block);
 }
 
-Transform operat_transformation (Transform t1, Transform t2) {
+Transform Server::operat_transformation (Transform t1, Transform t2){
+    mutex.lock();
+
     Transform res;
     res.c = t1.c;
     res.priority = t1.priority;
@@ -81,12 +84,16 @@ Transform operat_transformation (Transform t1, Transform t2) {
         res.priority = -1;
     }
     return res;
+
+    mutex.unlock();
 }
 
 void Server::read_from_client_1()
 {
-    if (num_clients !=2) 
+    if (num_clients !=2)
         return;
+
+    //mutex.lock();
 
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
     Transform transform;
@@ -98,19 +105,33 @@ void Server::read_from_client_1()
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> transform;
 
+    transform_client1 = transform;
+    num_transformaciones++;
+
+    transform.priority = 2;
+
+    if(num_transformaciones == 2){
+        transform = operat_transformation(transform_client1, transform_client2);
+    }
+
+    cout << "(1) # Transformaciones: " << num_transformaciones << endl;
+
     cout << "Posicion: " ;
     cout << transform.pos << endl;
     cout << "Caracter: " ;
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
 
-    transform.priority = 1;
+    //transform.priority = 1;
     write_to_client (transform, 2);
+
+    num_transformaciones--;
+    //mutex.unlock();
 }
 
 void Server::read_from_client_2()
 {
-    if (num_clients !=2) 
+    if (num_clients !=2)
         return;
 
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
@@ -123,12 +144,25 @@ void Server::read_from_client_2()
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> transform;
 
+    transform_client2 = transform;
+    num_transformaciones++;
+
+    transform.priority = 2;
+
+    if(num_transformaciones == 2){
+        transform = operat_transformation(transform_client2, transform_client1);
+    }
+
+    cout << "(2) # Transformaciones: " << num_transformaciones << endl;
+
     cout << "Posicion: " ;
     cout << transform.pos << endl;
     cout << "Caracter: " ;
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
 
-    transform.priority = 1;
     write_to_client (transform, 1);
+
+    num_transformaciones--;
+    //mutex.unlock();
 }
