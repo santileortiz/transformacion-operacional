@@ -27,11 +27,11 @@ Server::Server(QObject* parent): QTcpServer(parent)//QObject(parent)
 
   connect(&server1, SIGNAL(newConnection()),
     this, SLOT(acceptConnection1()));
-  server1.listen(QHostAddress::Any, 2345);
+  server1.listen(QHostAddress::Any, 2347);
 
   connect(&server2, SIGNAL(newConnection()),
     this, SLOT(acceptConnection2()));
-  server2.listen(QHostAddress::Any, 2346);
+  server2.listen(QHostAddress::Any, 2348);
 
   //thread1.start();
   //thread2.start();
@@ -127,8 +127,8 @@ void Server::read_from_client_1()
     transform.priority = 2;
 
     int cont = 0;
-    while(cont < 9999999){
-        printf(".");
+    while(cont < /*9999999*/INT_MAX){
+    //    printf(".");
         cont++;
     }
     printf("\n");
@@ -178,8 +178,8 @@ void Server::read_from_client_2()
     transform.priority = 2;
 
     int cont = 0;
-    while(cont < 9999999){
-        printf(".");
+    while(cont < /*9999999*/INT_MAX){
+    //    printf(".");
         cont++;
     }
     printf("\n");
