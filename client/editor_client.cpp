@@ -44,8 +44,8 @@ EditorCliente::EditorCliente(QWidget *parent)
         start("127.0.0.1", 2345);
     } else {
         m_label.setText(QString("Cliente 2"));
-        //start(args.at(1), 2346);
-        start("127.0.0.1", 2346);
+        start(args.at(1), 2346);
+        //start("127.0.0.1", 2346);
     }
 
     m_layout.addWidget(&m_textEdit);
@@ -115,13 +115,13 @@ void EditorCliente::m_read(/* arguments */) {
 
     t = t.insert(transform.pos, transform.c);
 
-    QTextCursor tmp_cursor = m_textEdit.textCursor();
-    int cur_position = m_textEdit.textCursor().position();
+    //QTextCursor tmp_cursor = m_textEdit.textCursor();
+    int cur_position = m_cursor.position() + 1;
 
     writing_to_box = true;
     m_textEdit.setText(t);
     writing_to_box = false;
 
-    tmp_cursor.setPosition(cur_position);
-    m_textEdit.setTextCursor(tmp_cursor);
+    m_cursor.setPosition(cur_position);
+    m_textEdit.setTextCursor(m_cursor);
 }

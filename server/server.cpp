@@ -1,5 +1,6 @@
 // server.cc
 #include "server.h"
+#include "mythread.h"
 #include <iostream>
 
 using namespace std;
@@ -16,10 +17,14 @@ QDataStream &operator>>(QDataStream &in, Transform &transform)
     return in;
 }
 
-Server::Server(QObject* parent): QObject(parent)
+Server::Server(QObject* parent): QTcpServer(parent)//QObject(parent)
 {
   num_clients = 0;
   num_transformaciones = 0;
+
+  //server1.moveToThread(&thread1);
+  //server2.moveToThread(&thread2);
+
   connect(&server1, SIGNAL(newConnection()),
     this, SLOT(acceptConnection1()));
   server1.listen(QHostAddress::Any, 2345);
@@ -27,12 +32,18 @@ Server::Server(QObject* parent): QObject(parent)
   connect(&server2, SIGNAL(newConnection()),
     this, SLOT(acceptConnection2()));
   server2.listen(QHostAddress::Any, 2346);
+
+  //thread1.start();
+  //thread2.start();
 }
 
 Server::~Server()
 {
   server1.close();
   server2.close();
+  //thread1.stop();
+  //thread2.stop();
+
 }
 
 void Server::acceptConnection1()
@@ -69,7 +80,7 @@ void Server::write_to_client (Transform transform, int cli_number) {
 }
 
 Transform Server::operat_transformation (Transform t1, Transform t2){
-    mutex.lock();
+    //mutex.lock();
 
     Transform res;
     res.c = t1.c;
@@ -85,7 +96,7 @@ Transform Server::operat_transformation (Transform t1, Transform t2){
     }
     return res;
 
-    mutex.unlock();
+    //mutex.unlock();
 }
 
 void Server::read_from_client_1()
@@ -98,6 +109,8 @@ void Server::read_from_client_1()
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
     Transform transform;
 
+    cout << "(1) bytes: " << tcpSocket->bytesAvailable() << endl;
+
     if (tcpSocket->bytesAvailable() < 9)
         return;
 
@@ -106,9 +119,17 @@ void Server::read_from_client_1()
     sendStream >> transform;
 
     transform_client1 = transform;
+
+    mutex.lock();
     num_transformaciones++;
+    mutex.unlock();
 
     transform.priority = 2;
+
+    int cont = 0;
+    while(cont < 99999999){
+        cont++;
+    }
 
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client1, transform_client2);
@@ -137,6 +158,8 @@ void Server::read_from_client_2()
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
     Transform transform;
 
+    cout << "(2) bytes: " << tcpSocket->bytesAvailable() << endl;
+
     if (tcpSocket->bytesAvailable() < 9)
         return;
 
@@ -145,9 +168,17 @@ void Server::read_from_client_2()
     sendStream >> transform;
 
     transform_client2 = transform;
+
+    mutex.lock();
     num_transformaciones++;
+    mutex.unlock();
 
     transform.priority = 2;
+
+    int cont = 0;
+    while(cont < 99999999){
+        cont++;
+    }
 
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client2, transform_client1);
@@ -166,3 +197,15 @@ void Server::read_from_client_2()
     num_transformaciones--;
     //mutex.unlock();
 }
+
+/*
+void Server::incomingConnections(int socketDescriptor)    //Incoming connections
+{
+  MyThread *thread = new MyThread(socketDescriptor,this);
+
+  connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
+  //Start a new thread for the connection
+  thread->start();    //Which will cause the run() function
+}
+*/
