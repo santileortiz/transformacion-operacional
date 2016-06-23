@@ -4,8 +4,6 @@
 #include <QTcpSocket>
 #include <QMutex>
 
-//#include "mythread.h"
-
 struct Transform
 {
     qint32 pos;
@@ -34,13 +32,10 @@ private:
   Transform transform_client1;
   Transform transform_client2;
   QMutex mutex;
-  //QThread thread1;
-  //QThread thread2;
   QTcpServer server1;
   QTcpServer server2;
   QTcpSocket* clients[2];
 protected:
-  // void incomingConnection(qintptr socketDescriptor);
    void incomingConnections(int socketDescriptor);   //This is where we deal with incoming connections
 
 };

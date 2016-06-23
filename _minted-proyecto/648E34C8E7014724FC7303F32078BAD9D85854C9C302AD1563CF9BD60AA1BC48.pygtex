@@ -1,0 +1,49 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}mythread.h\PYGZdq{}}
+
+\PYG{n}{MyThread}\PYG{o}{::}\PYG{n}{MyThread}\PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{ID}\PYG{p}{,} \PYG{n}{QObject} \PYG{o}{*}\PYG{n}{parent}\PYG{p}{)}\PYG{o}{:}
+  \PYG{n}{QThread}\PYG{p}{(}\PYG{n}{parent}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{this}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{socketDescriptor} \PYG{o}{=} \PYG{n}{ID}\PYG{p}{;}            \PYG{c+c1}{//Get the socket ID number}
+\PYG{p}{\PYGZcb{}}
+
+
+\PYG{k+kt}{void} \PYG{n}{MyThread}\PYG{o}{::}\PYG{n}{run}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+  \PYG{c+c1}{//thread starts here}
+
+  \PYG{n}{socket} \PYG{o}{=} \PYG{n}{new} \PYG{n}{QTcpSocket}\PYG{p}{();}
+
+  \PYG{k}{if} \PYG{p}{(} \PYG{o}{!}\PYG{n}{socket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{setSocketDescriptor}\PYG{p}{(}\PYG{n}{this}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{socketDescriptor}\PYG{p}{)} \PYG{p}{)}   \PYG{c+c1}{//Here we set the socket ID}
+  \PYG{p}{\PYGZob{}}
+    \PYG{n}{emit} \PYG{n}{error} \PYG{p}{(}\PYG{n}{socket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{error}\PYG{p}{());}         \PYG{c+c1}{//emit the error signal}
+    \PYG{k}{return}\PYG{p}{;}
+  \PYG{p}{\PYGZcb{}}
+
+  \PYG{n}{connect}\PYG{p}{(}\PYG{n}{socket}\PYG{p}{,} \PYG{n}{SIGNAL}\PYG{p}{(}\PYG{n}{readyRead}\PYG{p}{()),} \PYG{n}{this}\PYG{p}{,} \PYG{n}{SLOT}\PYG{p}{(}\PYG{n}{readyRead}\PYG{p}{()),}\PYG{n}{Qt}\PYG{o}{::}\PYG{n}{DirectConnection} \PYG{p}{);}  \PYG{c+c1}{//Make a direct connection to the thread}
+  \PYG{n}{connect}\PYG{p}{(}\PYG{n}{socket}\PYG{p}{,} \PYG{n}{SIGNAL}\PYG{p}{(}\PYG{n}{disconnected}\PYG{p}{()),} \PYG{n}{this}\PYG{p}{,} \PYG{n}{SLOT}\PYG{p}{(}\PYG{n}{disconnected}\PYG{p}{()));}
+
+  \PYG{c+c1}{//client is connected}
+
+  \PYG{c+c1}{//IMPORTANT}
+  \PYG{c+c1}{//This function will cause the thread to stay alive until we tell it to close}
+  \PYG{c+c1}{//Otherwise the run() function will end and the thread will be dropped / destroyed}
+  \PYG{n}{exec}\PYG{p}{();}
+\PYG{p}{\PYGZcb{}}
+
+
+\PYG{k+kt}{void} \PYG{n}{MyThread}\PYG{o}{::}\PYG{n}{readyRead}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{QByteArray} \PYG{n}{Data} \PYG{o}{=} \PYG{n}{socket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{readAll}\PYG{p}{();}    \PYG{c+c1}{//Get all the information from the connected client}
+
+  \PYG{c+c1}{//Send the info back, (echo server)}
+  \PYG{n}{socket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{write}\PYG{p}{(}\PYG{n}{Data}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+
+\PYG{k+kt}{void} \PYG{n}{MyThread}\PYG{o}{::}\PYG{n}{disconnected}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{socket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{deleteLater}\PYG{p}{();}
+  \PYG{n}{exit}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

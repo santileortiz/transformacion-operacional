@@ -31,8 +31,6 @@ EditorCliente::EditorCliente(QWidget *parent)
     writing_to_box = false;
     connect(&m_textEdit, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
     connect(&m_textEdit, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorPositionChanged()));
-    //connect(&sock, SIGNAL(readyRead()), this, SLOT(m_read()));
-    //connect(&sock, SIGNAL(bytesWritten()), this, SLOT(m_read()));
     connect(&sock, SIGNAL(readyRead()), this, SLOT(m_read()));
 
     m_cursor = m_textEdit.textCursor();
@@ -92,7 +90,7 @@ void EditorCliente::start(QString address, quint16 port)
   sock.connectToHost(addr, port);
 }
 
-void EditorCliente::m_read(/* arguments */) {
+void EditorCliente::m_read() {
     Transform transform;
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
 

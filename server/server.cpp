@@ -22,9 +22,6 @@ Server::Server(QObject* parent): QTcpServer(parent)//QObject(parent)
   num_clients = 0;
   num_transformaciones = 0;
 
-  //server1.moveToThread(&thread1);
-  //server2.moveToThread(&thread2);
-
   connect(&server1, SIGNAL(newConnection()),
     this, SLOT(acceptConnection1()));
   server1.listen(QHostAddress::Any, 2347);
@@ -32,18 +29,12 @@ Server::Server(QObject* parent): QTcpServer(parent)//QObject(parent)
   connect(&server2, SIGNAL(newConnection()),
     this, SLOT(acceptConnection2()));
   server2.listen(QHostAddress::Any, 2348);
-
-  //thread1.start();
-  //thread2.start();
 }
 
 Server::~Server()
 {
   server1.close();
   server2.close();
-  //thread1.stop();
-  //thread2.stop();
-
 }
 
 void Server::acceptConnection1()
@@ -80,8 +71,6 @@ void Server::write_to_client (Transform transform, int cli_number) {
 }
 
 Transform Server::operat_transformation (Transform t1, Transform t2){
-    //mutex.lock();
-
     Transform res;
     res.c = t1.c;
     res.priority = t1.priority;
@@ -95,16 +84,12 @@ Transform Server::operat_transformation (Transform t1, Transform t2){
         res.priority = -1;
     }
     return res;
-
-    //mutex.unlock();
 }
 
 void Server::read_from_client_1()
 {
     if (num_clients !=2)
         return;
-
-    //mutex.lock();
 
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
     Transform transform;
@@ -128,16 +113,12 @@ void Server::read_from_client_1()
 
     int cont = 0;
     while(cont < /*9999999*/INT_MAX){
-    //    printf(".");
         cont++;
     }
-    printf("\n");
 
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client1, transform_client2);
     }
-
-    cout << "(1) # Transformaciones: " << num_transformaciones << endl;
 
     cout << "Posicion: " ;
     cout << transform.pos << endl;
@@ -145,11 +126,9 @@ void Server::read_from_client_1()
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
 
-    //transform.priority = 1;
     write_to_client (transform, 2);
 
     num_transformaciones--;
-    //mutex.unlock();
 }
 
 void Server::read_from_client_2()
@@ -179,16 +158,12 @@ void Server::read_from_client_2()
 
     int cont = 0;
     while(cont < /*9999999*/INT_MAX){
-    //    printf(".");
         cont++;
     }
-    printf("\n");
 
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client2, transform_client1);
     }
-
-    cout << "(2) # Transformaciones: " << num_transformaciones << endl;
 
     cout << "Posicion: " ;
     cout << transform.pos << endl;
@@ -199,7 +174,6 @@ void Server::read_from_client_2()
     write_to_client (transform, 1);
 
     num_transformaciones--;
-    //mutex.unlock();
 }
 
 

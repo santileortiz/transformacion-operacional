@@ -1,0 +1,192 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+c1}{// server.cc}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}server.h\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZdq{}mythread.h\PYGZdq{}}
+\PYG{c+cp}{\PYGZsh{}include} \PYG{c+cpf}{\PYGZlt{}iostream\PYGZgt{}}
+
+\PYG{n}{using} \PYG{n}{namespace} \PYG{n}{std}\PYG{p}{;}
+
+\PYG{n}{QDataStream} \PYG{o}{\PYGZam{}}\PYG{n}{operator}\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{p}{(}\PYG{n}{QDataStream} \PYG{o}{\PYGZam{}}\PYG{n}{out}\PYG{p}{,} \PYG{k}{const} \PYG{n}{Transform} \PYG{o}{\PYGZam{}}\PYG{n}{transform}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+    \PYG{n}{out} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{c} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{priority}\PYG{p}{;}
+    \PYG{k}{return} \PYG{n}{out}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{n}{QDataStream} \PYG{o}{\PYGZam{}}\PYG{n}{operator}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{(}\PYG{n}{QDataStream} \PYG{o}{\PYGZam{}}\PYG{n}{in}\PYG{p}{,} \PYG{n}{Transform} \PYG{o}{\PYGZam{}}\PYG{n}{transform}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+    \PYG{n}{in} \PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{c} \PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{priority}\PYG{p}{;}
+    \PYG{k}{return} \PYG{n}{in}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{n}{Server}\PYG{o}{::}\PYG{n}{Server}\PYG{p}{(}\PYG{n}{QObject}\PYG{o}{*} \PYG{n}{parent}\PYG{p}{)}\PYG{o}{:} \PYG{n}{QTcpServer}\PYG{p}{(}\PYG{n}{parent}\PYG{p}{)}\PYG{c+c1}{//QObject(parent)}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{num\PYGZus{}clients} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+  \PYG{n}{num\PYGZus{}transformaciones} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+
+  \PYG{n}{connect}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{server1}\PYG{p}{,} \PYG{n}{SIGNAL}\PYG{p}{(}\PYG{n}{newConnection}\PYG{p}{()),}
+    \PYG{n}{this}\PYG{p}{,} \PYG{n}{SLOT}\PYG{p}{(}\PYG{n}{acceptConnection1}\PYG{p}{()));}
+  \PYG{n}{server1}\PYG{p}{.}\PYG{n}{listen}\PYG{p}{(}\PYG{n}{QHostAddress}\PYG{o}{::}\PYG{n}{Any}\PYG{p}{,} \PYG{l+m+mi}{2347}\PYG{p}{);}
+
+  \PYG{n}{connect}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{server2}\PYG{p}{,} \PYG{n}{SIGNAL}\PYG{p}{(}\PYG{n}{newConnection}\PYG{p}{()),}
+    \PYG{n}{this}\PYG{p}{,} \PYG{n}{SLOT}\PYG{p}{(}\PYG{n}{acceptConnection2}\PYG{p}{()));}
+  \PYG{n}{server2}\PYG{p}{.}\PYG{n}{listen}\PYG{p}{(}\PYG{n}{QHostAddress}\PYG{o}{::}\PYG{n}{Any}\PYG{p}{,} \PYG{l+m+mi}{2348}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{n}{Server}\PYG{o}{::\PYGZti{}}\PYG{n}{Server}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{server1}\PYG{p}{.}\PYG{n}{close}\PYG{p}{();}
+  \PYG{n}{server2}\PYG{p}{.}\PYG{n}{close}\PYG{p}{();}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{void} \PYG{n}{Server}\PYG{o}{::}\PYG{n}{acceptConnection1}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{num\PYGZus{}clients}\PYG{o}{++}\PYG{p}{;}
+  \PYG{n}{clients}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{server1}\PYG{p}{.}\PYG{n}{nextPendingConnection}\PYG{p}{();}
+  \PYG{n}{quint16} \PYG{n}{port} \PYG{o}{=} \PYG{n}{clients}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{localPort}\PYG{p}{();}
+  \PYG{n}{QString} \PYG{n}{port\PYGZus{}s} \PYG{o}{=} \PYG{n}{QString}\PYG{o}{::}\PYG{n}{number}\PYG{p}{(}\PYG{n}{port}\PYG{p}{);}
+  \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Puerto: \PYGZdq{}}\PYG{p}{;}
+  \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{port} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+  \PYG{n}{connect}\PYG{p}{(}\PYG{n}{clients}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{SIGNAL}\PYG{p}{(}\PYG{n}{readyRead}\PYG{p}{()),}
+    \PYG{n}{this}\PYG{p}{,} \PYG{n}{SLOT}\PYG{p}{(}\PYG{n}{read\PYGZus{}from\PYGZus{}client\PYGZus{}1}\PYG{p}{()));}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{void} \PYG{n}{Server}\PYG{o}{::}\PYG{n}{acceptConnection2}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{num\PYGZus{}clients}\PYG{o}{++}\PYG{p}{;}
+  \PYG{n}{clients}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{n}{server2}\PYG{p}{.}\PYG{n}{nextPendingConnection}\PYG{p}{();}
+  \PYG{n}{quint16} \PYG{n}{port} \PYG{o}{=} \PYG{n}{clients}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{localPort}\PYG{p}{();}
+  \PYG{n}{QString} \PYG{n}{port\PYGZus{}s} \PYG{o}{=} \PYG{n}{QString}\PYG{o}{::}\PYG{n}{number}\PYG{p}{(}\PYG{n}{port}\PYG{p}{);}
+  \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Puerto: \PYGZdq{}}\PYG{p}{;}
+  \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{port} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+  \PYG{n}{connect}\PYG{p}{(}\PYG{n}{clients}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{],} \PYG{n}{SIGNAL}\PYG{p}{(}\PYG{n}{readyRead}\PYG{p}{()),}
+    \PYG{n}{this}\PYG{p}{,} \PYG{n}{SLOT}\PYG{p}{(}\PYG{n}{read\PYGZus{}from\PYGZus{}client\PYGZus{}2}\PYG{p}{()));}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{void} \PYG{n}{Server}\PYG{o}{::}\PYG{n}{write\PYGZus{}to\PYGZus{}client} \PYG{p}{(}\PYG{n}{Transform} \PYG{n}{transform}\PYG{p}{,} \PYG{k+kt}{int} \PYG{n}{cli\PYGZus{}number}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+    \PYG{n}{QByteArray} \PYG{n}{block}\PYG{p}{;}
+    \PYG{n}{QDataStream} \PYG{n+nf}{sendStream}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{block}\PYG{p}{,} \PYG{n}{QIODevice}\PYG{o}{::}\PYG{n}{ReadWrite}\PYG{p}{);}
+    \PYG{n}{sendStream} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{;}
+    \PYG{n}{clients}\PYG{p}{[}\PYG{n}{cli\PYGZus{}number}\PYG{p}{]}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{write}\PYG{p}{(}\PYG{n}{block}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{n}{Transform} \PYG{n}{Server}\PYG{o}{::}\PYG{n}{operat\PYGZus{}transformation} \PYG{p}{(}\PYG{n}{Transform} \PYG{n}{t1}\PYG{p}{,} \PYG{n}{Transform} \PYG{n}{t2}\PYG{p}{)\PYGZob{}}
+    \PYG{c+c1}{//mutex.lock();}
+
+    \PYG{n}{Transform} \PYG{n}{res}\PYG{p}{;}
+    \PYG{n}{res}\PYG{p}{.}\PYG{n}{c} \PYG{o}{=} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{c}\PYG{p}{;}
+    \PYG{n}{res}\PYG{p}{.}\PYG{n}{priority} \PYG{o}{=} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{priority}\PYG{p}{;}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{t1}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZlt{}} \PYG{n}{t2}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{||}
+            \PYG{p}{(}\PYG{n}{t1}\PYG{p}{.}\PYG{n}{pos}\PYG{o}{==}\PYG{n}{t2}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{c}\PYG{o}{!=}\PYG{n}{t2}\PYG{p}{.}\PYG{n}{c} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{priority}\PYG{o}{\PYGZlt{}}\PYG{n}{t2}\PYG{p}{.}\PYG{n}{priority}\PYG{p}{))} \PYG{p}{\PYGZob{}}
+        \PYG{n}{res}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{=} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{pos}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}} \PYG{k}{else} \PYG{k}{if} \PYG{p}{(}\PYG{n}{t1}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZgt{}} \PYG{n}{t2}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{||}
+            \PYG{p}{(}\PYG{n}{t1}\PYG{p}{.}\PYG{n}{pos}\PYG{o}{==}\PYG{n}{t2}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{c}\PYG{o}{!=}\PYG{n}{t2}\PYG{p}{.}\PYG{n}{c} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{priority}\PYG{o}{\PYGZgt{}}\PYG{n}{t2}\PYG{p}{.}\PYG{n}{priority}\PYG{p}{))} \PYG{p}{\PYGZob{}}
+        \PYG{n}{res}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{=} \PYG{n}{t1}\PYG{p}{.}\PYG{n}{pos}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}} \PYG{k}{else} \PYG{p}{\PYGZob{}}
+        \PYG{n}{res}\PYG{p}{.}\PYG{n}{priority} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+    \PYG{k}{return} \PYG{n}{res}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{void} \PYG{n}{Server}\PYG{o}{::}\PYG{n}{read\PYGZus{}from\PYGZus{}client\PYGZus{}1}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{num\PYGZus{}clients} \PYG{o}{!=}\PYG{l+m+mi}{2}\PYG{p}{)}
+        \PYG{k}{return}\PYG{p}{;}
+
+    \PYG{n}{QTcpSocket} \PYG{o}{*}\PYG{n}{tcpSocket} \PYG{o}{=} \PYG{p}{(}\PYG{n}{QTcpSocket}\PYG{o}{*}\PYG{p}{)}\PYG{n}{sender}\PYG{p}{();}
+    \PYG{n}{Transform} \PYG{n}{transform}\PYG{p}{;}
+
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}(1) bytes: \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{tcpSocket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{bytesAvailable}\PYG{p}{()} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{tcpSocket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{bytesAvailable}\PYG{p}{()} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{)}
+        \PYG{k}{return}\PYG{p}{;}
+
+    \PYG{n}{QByteArray} \PYG{n}{block} \PYG{o}{=} \PYG{n}{tcpSocket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{read}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{);}
+    \PYG{n}{QDataStream} \PYG{n+nf}{sendStream}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{block}\PYG{p}{,} \PYG{n}{QIODevice}\PYG{o}{::}\PYG{n}{ReadWrite}\PYG{p}{);}
+    \PYG{n}{sendStream} \PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{transform}\PYG{p}{;}
+
+    \PYG{n}{transform\PYGZus{}client1} \PYG{o}{=} \PYG{n}{transform}\PYG{p}{;}
+
+    \PYG{n}{mutex}\PYG{p}{.}\PYG{n}{lock}\PYG{p}{();}
+    \PYG{n}{num\PYGZus{}transformaciones}\PYG{o}{++}\PYG{p}{;}
+    \PYG{n}{mutex}\PYG{p}{.}\PYG{n}{unlock}\PYG{p}{();}
+
+    \PYG{n}{transform}\PYG{p}{.}\PYG{n}{priority} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;}
+
+    \PYG{k+kt}{int} \PYG{n}{cont} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{k}{while}\PYG{p}{(}\PYG{n}{cont} \PYG{o}{\PYGZlt{}} \PYG{c+cm}{/*9999999*/}\PYG{n}{INT\PYGZus{}MAX}\PYG{p}{)\PYGZob{}}
+        \PYG{n}{cont}\PYG{o}{++}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if}\PYG{p}{(}\PYG{n}{num\PYGZus{}transformaciones} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{)\PYGZob{}}
+        \PYG{n}{transform} \PYG{o}{=} \PYG{n}{operat\PYGZus{}transformation}\PYG{p}{(}\PYG{n}{transform\PYGZus{}client1}\PYG{p}{,} \PYG{n}{transform\PYGZus{}client2}\PYG{p}{);}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Posicion: \PYGZdq{}} \PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Caracter: \PYGZdq{}} \PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{c} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Prioridad: \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{priority} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+    \PYG{n}{write\PYGZus{}to\PYGZus{}client} \PYG{p}{(}\PYG{n}{transform}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{);}
+
+    \PYG{n}{num\PYGZus{}transformaciones}\PYG{o}{\PYGZhy{}\PYGZhy{}}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{k+kt}{void} \PYG{n}{Server}\PYG{o}{::}\PYG{n}{read\PYGZus{}from\PYGZus{}client\PYGZus{}2}\PYG{p}{()}
+\PYG{p}{\PYGZob{}}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{num\PYGZus{}clients} \PYG{o}{!=}\PYG{l+m+mi}{2}\PYG{p}{)}
+        \PYG{k}{return}\PYG{p}{;}
+
+    \PYG{n}{QTcpSocket} \PYG{o}{*}\PYG{n}{tcpSocket} \PYG{o}{=} \PYG{p}{(}\PYG{n}{QTcpSocket}\PYG{o}{*}\PYG{p}{)}\PYG{n}{sender}\PYG{p}{();}
+    \PYG{n}{Transform} \PYG{n}{transform}\PYG{p}{;}
+
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}(2) bytes: \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{tcpSocket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{bytesAvailable}\PYG{p}{()} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{tcpSocket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{bytesAvailable}\PYG{p}{()} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{)}
+        \PYG{k}{return}\PYG{p}{;}
+
+    \PYG{n}{QByteArray} \PYG{n}{block} \PYG{o}{=} \PYG{n}{tcpSocket}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{read}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{);}
+    \PYG{n}{QDataStream} \PYG{n+nf}{sendStream}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{block}\PYG{p}{,} \PYG{n}{QIODevice}\PYG{o}{::}\PYG{n}{ReadWrite}\PYG{p}{);}
+    \PYG{n}{sendStream} \PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{transform}\PYG{p}{;}
+
+    \PYG{n}{transform\PYGZus{}client2} \PYG{o}{=} \PYG{n}{transform}\PYG{p}{;}
+
+    \PYG{n}{mutex}\PYG{p}{.}\PYG{n}{lock}\PYG{p}{();}
+    \PYG{n}{num\PYGZus{}transformaciones}\PYG{o}{++}\PYG{p}{;}
+    \PYG{n}{mutex}\PYG{p}{.}\PYG{n}{unlock}\PYG{p}{();}
+
+    \PYG{n}{transform}\PYG{p}{.}\PYG{n}{priority} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{;}
+
+    \PYG{k+kt}{int} \PYG{n}{cont} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{;}
+    \PYG{k}{while}\PYG{p}{(}\PYG{n}{cont} \PYG{o}{\PYGZlt{}} \PYG{c+cm}{/*9999999*/}\PYG{n}{INT\PYGZus{}MAX}\PYG{p}{)\PYGZob{}}
+        \PYG{n}{cont}\PYG{o}{++}\PYG{p}{;}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{k}{if}\PYG{p}{(}\PYG{n}{num\PYGZus{}transformaciones} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{)\PYGZob{}}
+        \PYG{n}{transform} \PYG{o}{=} \PYG{n}{operat\PYGZus{}transformation}\PYG{p}{(}\PYG{n}{transform\PYGZus{}client2}\PYG{p}{,} \PYG{n}{transform\PYGZus{}client1}\PYG{p}{);}
+    \PYG{p}{\PYGZcb{}}
+
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Posicion: \PYGZdq{}} \PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{pos} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Caracter: \PYGZdq{}} \PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{c} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+    \PYG{n}{cout} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{l+s}{\PYGZdq{}Prioridad: \PYGZdq{}} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{transform}\PYG{p}{.}\PYG{n}{priority} \PYG{o}{\PYGZlt{}\PYGZlt{}} \PYG{n}{endl}\PYG{p}{;}
+
+    \PYG{n}{write\PYGZus{}to\PYGZus{}client} \PYG{p}{(}\PYG{n}{transform}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{);}
+
+    \PYG{n}{num\PYGZus{}transformaciones}\PYG{o}{\PYGZhy{}\PYGZhy{}}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+
+
+\PYG{k+kt}{void} \PYG{n}{Server}\PYG{o}{::}\PYG{n}{incomingConnections}\PYG{p}{(}\PYG{k+kt}{int} \PYG{n}{socketDescriptor}\PYG{p}{)}    \PYG{c+c1}{//Incoming connections}
+\PYG{p}{\PYGZob{}}
+  \PYG{n}{MyThread} \PYG{o}{*}\PYG{k+kr}{thread} \PYG{o}{=} \PYG{n}{new} \PYG{n}{MyThread}\PYG{p}{(}\PYG{n}{socketDescriptor}\PYG{p}{,}\PYG{n}{this}\PYG{p}{);}
+
+  \PYG{n}{connect}\PYG{p}{(}\PYG{k+kr}{thread}\PYG{p}{,} \PYG{n}{SIGNAL}\PYG{p}{(}\PYG{n}{finished}\PYG{p}{()),} \PYG{k+kr}{thread}\PYG{p}{,} \PYG{n}{SLOT}\PYG{p}{(}\PYG{n}{deleteLater}\PYG{p}{()));}
+
+  \PYG{c+c1}{//Start a new thread for the connection}
+  \PYG{k+kr}{thread}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{start}\PYG{p}{();}    \PYG{c+c1}{//Which will cause the run() function}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

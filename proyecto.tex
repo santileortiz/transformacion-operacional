@@ -1,0 +1,40 @@
+\documentclass[12pt]{article}
+\usepackage[spanish,es-lcroman]{babel}
+%\unaccentedoperators
+\usepackage{amsmath, amsthm, amssymb}
+%\usepackage[makeroom]{cancel}
+%\usepackage{enumerate}
+%\usepackage{tabularx}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{minted}
+\restylefloat{table}
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{url}
+%\usepackage{biblatex}
+
+
+\lstset{language=bash, breaklines=true, captionpos=b, keepspaces=true, showtabs=false, tabsize=2, basicstyle=\footnotesize, showspaces=false, showstringspaces=false}
+
+\title{Transformación de Operaciones}
+\author{Santiago León Ortiz \\ Carlos Antonio Bulnes Domínguez}
+
+\begin{document}
+\maketitle
+
+\section{Cliente}
+
+\inputminted[frame=lines, linenos, mathescape, breaklines=true, tabsize=2]{c}{client/main.cpp}
+\inputminted[frame=lines, linenos, mathescape, breaklines=true, tabsize=2]{c}{client/editor_client.cpp}
+
+\section{Servidor}
+
+\inputminted[frame=lines, linenos, mathescape, breaklines=true, tabsize=2]{c}{server/server_main.cpp}
+\inputminted[frame=lines, linenos, mathescape, breaklines=true, tabsize=2]{c}{server/server.cpp}
+\inputminted[frame=lines, linenos, mathescape, breaklines=true, tabsize=2]{c}{server/mythread.cpp}
+%\inputminted[frame=lines, linenos, mathescape, breaklines=true, tabsize=2]{c}{serer/server_main.cpp}
+
+
+\end{document}
