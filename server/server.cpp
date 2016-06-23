@@ -127,9 +127,11 @@ void Server::read_from_client_1()
     transform.priority = 2;
 
     int cont = 0;
-    while(cont < 99999999){
+    while(cont < 9999999){
+        printf(".");
         cont++;
     }
+    printf("\n");
 
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client1, transform_client2);
@@ -176,9 +178,11 @@ void Server::read_from_client_2()
     transform.priority = 2;
 
     int cont = 0;
-    while(cont < 99999999){
+    while(cont < 9999999){
+        printf(".");
         cont++;
     }
+    printf("\n");
 
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client2, transform_client1);
@@ -198,7 +202,7 @@ void Server::read_from_client_2()
     //mutex.unlock();
 }
 
-/*
+
 void Server::incomingConnections(int socketDescriptor)    //Incoming connections
 {
   MyThread *thread = new MyThread(socketDescriptor,this);
@@ -208,4 +212,3 @@ void Server::incomingConnections(int socketDescriptor)    //Incoming connections
   //Start a new thread for the connection
   thread->start();    //Which will cause the run() function
 }
-*/

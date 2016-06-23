@@ -1,3 +1,4 @@
+
 #include "mythread.h"
 
 MyThread::MyThread(int ID, QObject *parent):
@@ -13,7 +14,7 @@ void MyThread::run()
 
   socket = new QTcpSocket();
 
-  if ( !socket->setSocketDescriptor(this->socketDesriptor) )   //Here we set the socket ID
+  if ( !socket->setSocketDescriptor(this->socketDescriptor) )   //Here we set the socket ID
   {
     emit error (socket->error());         //emit the error signal
     return;

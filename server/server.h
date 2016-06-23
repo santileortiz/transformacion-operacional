@@ -41,6 +41,6 @@ private:
   QTcpSocket* clients[2];
 protected:
   // void incomingConnection(qintptr socketDescriptor);
-   //void incomingConnections(int socketDescriptor);   //This is where we deal with incoming connections
+   void incomingConnections(int socketDescriptor);   //This is where we deal with incoming connections
 
 };
