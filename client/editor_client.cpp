@@ -116,7 +116,11 @@ void EditorCliente::m_read(/* arguments */) {
     t = t.insert(transform.pos, transform.c);
 
     QTextCursor tmp_cursor = m_textEdit.textCursor();
-    int cur_position = m_textEdit.textCursor().position() + 1;
+    int cur_position;
+    if (transform.pos < m_textEdit.textCursor().position())
+        cur_position = m_textEdit.textCursor().position() + 1;
+    else
+        cur_position = m_textEdit.textCursor().position();
 
     writing_to_box = true;
     m_textEdit.setText(t);
