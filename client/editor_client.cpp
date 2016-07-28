@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <QString>
+#include <QKeyEvent>
 #include <iostream>
 
 using namespace std;
@@ -145,10 +146,7 @@ void EditorCliente::m_read() {
 
         if(transform.time_stamp[1] != time_stamps[0] && lista_local.size() > 0){
             transform_tmp = lista_local.front();
-            if(id_cliente == 1)
-                transform = operat_transformation(transform, transform_tmp);
-            else
-                transform = operat_transformation(transform_tmp, transform);
+            transform = operat_transformation(transform_tmp, transform);
         }
 
         t = t.insert(transform.pos, transform.c);
@@ -180,23 +178,6 @@ void EditorCliente::m_read() {
 
 }
 
-Transform EditorCliente::operat_transformation (Transform t1, Transform t2){
-    cout << "En Transformacion" << endl;
-    Transform res;
-    res.c = t1.c;
-    res.priority = t1.priority;
-    if (t1.pos < t2.pos ||
-            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority<t2.priority)) {
-        res.pos = t1.pos;
-    } else if (t1.pos > t2.pos ||
-            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority>t2.priority)) {
-        res.pos = t1.pos+1;
-    } else {
-        res.priority = -1;
-    }
-    return res;
-}
-
 Transform EditorCliente::buscaEnLista(std::list<Transform> lista, int time_stamp){
     //cout << "Elementos en la lista" << endl;
     Transform new_transform;
@@ -212,4 +193,33 @@ Transform EditorCliente::buscaEnLista(std::list<Transform> lista, int time_stamp
     }
 
     return new_transform;
+}
+
+void EditorCliente::keyReleaseEvent(QKeyEvent *event){
+
+    // Backspace: 16777219
+    // Suprimir: 16777223
+    if(event->key() == 16777219)
+        cout << "Se presiono Backspace" << endl;
+    else if(event->key() == 16777223)
+        cout << "Se presiono suprimir" << endl;
+
+    //cout << "Tecla soltada: " << event->key() << endl;
+}
+
+Transform EditorCliente::operat_transformation (Transform t1, Transform t2){
+    cout << "En Transformacion" << endl;
+    Transform res;
+    res.c = t1.c;
+    res.priority = t1.priority;
+    if (t1.pos < t2.pos ||
+            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority<t2.priority)) {
+        res.pos = t1.pos;
+    } else if (t1.pos > t2.pos ||
+            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority>t2.priority)) {
+        res.pos = t1.pos+1;
+    } else {
+        res.priority = -1;
+    }
+    return res;
 }
