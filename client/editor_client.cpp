@@ -68,6 +68,8 @@ void EditorCliente::onTextChanged(){
     new_transform.c = t[new_transform.pos].toLatin1();
     new_transform.priority = 0;
     new_transform.time_stamp = time_stamps[0];
+    lista_local.push_front(new_transform);
+
     sendStream << new_transform;
     sock.write(block);
 
@@ -101,20 +103,22 @@ void EditorCliente::m_read() {
     QByteArray block = tcpSocket->read(13);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> transform;
-
+/*
     if(transform.time_stamp - time_stamps[1] == 1){
         cout << "La Transformacion esta permitida" << endl;
 
-    }else{
-        lista_transformaciones.push_front(transform);
-        transform_tmp = buscaEnLista(lista_transformaciones, transform);
+    }//else{*/
+    lista_transformaciones.push_front(transform);
+    transform_tmp = buscaEnLista(lista_transformaciones, transform);
 
-        // Si no encuetra el elemento la funcion de busqueda
-        // retorna una estructura con priority = -1
-        if(transform_tmp.priority != -1)
-            transform = transform_tmp;
-        else
-            return;
+    // Si no encuetra el elemento la funcion de busqueda
+    // retorna una estructura con priority = -1
+    if(transform_tmp.priority != -1 && transform_tmp.time_stamp - time_stamps[1] == 1){
+        cout << "La Transformacion esta permitida" << endl;
+        transform = transform_tmp;
+    }else{
+        cout << "La transformacion no esta permitida" << endl;
+        return;
     }
 
     cout << "Respuesta del servidor:"<< endl;
@@ -165,14 +169,6 @@ Transform EditorCliente::operat_transformation (Transform t1, Transform t2){
     }
     return res;
 }
-/*
-void EditorCliente::push(Transform transform){
-    for (int i = 0; i < 20; i++){
-        if(lista_transformaciones[i].priority == -1)
-            lista_transformaciones[i] = transform;
-    }
-}
-*/
 
 Transform EditorCliente::buscaEnLista(std::list<Transform> lista, Transform transform){
     //cout << "Elementos en la lista" << endl;
