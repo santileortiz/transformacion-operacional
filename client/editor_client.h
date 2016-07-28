@@ -16,7 +16,7 @@ struct Transform
 {
     qint32 pos;
     qint32 priority;
-    qint32 time_stamp;
+    qint32 time_stamp[2];
     quint8 c;
 };
 
@@ -57,7 +57,7 @@ private:
     std::list<Transform> lista_local;
     std::list<Transform> lista_transformaciones;
 
-    Transform buscaEnLista(std::list<Transform>, Transform);
+    Transform buscaEnLista(std::list<Transform>, int);
     //void push(Transform);
 };
 

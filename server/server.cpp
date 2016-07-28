@@ -8,13 +8,13 @@ using namespace std;
 
 QDataStream &operator<<(QDataStream &out, const Transform &transform)
 {
-    out << transform.pos << transform.c << transform.priority << transform.time_stamp;
+    out << transform.pos << transform.c << transform.priority << transform.time_stamp[0] << transform.time_stamp[1];
     return out;
 }
 
 QDataStream &operator>>(QDataStream &in, Transform &transform)
 {
-    in >> transform.pos >> transform.c >> transform.priority >> transform.time_stamp;
+    in >> transform.pos >> transform.c >> transform.priority >> transform.time_stamp[0] >> transform.time_stamp[1];
     return in;
 }
 
@@ -103,10 +103,10 @@ void Server::read_from_client_1()
 
     cout << "(1) bytes: " << tcpSocket->bytesAvailable() << endl;
 
-    if (tcpSocket->bytesAvailable() < 13)
+    if (tcpSocket->bytesAvailable() < 17)
         return;
 
-    QByteArray block = tcpSocket->read(13);
+    QByteArray block = tcpSocket->read(17);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> transform;
 
@@ -129,7 +129,7 @@ void Server::read_from_client_1()
     cout << "Caracter: " ;
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
-    cout << "time_stamp: " << transform.time_stamp << endl;
+    cout << "time_stamp: " << transform.time_stamp[0] << ", " << transform.time_stamp[1] << endl;
 
     //cout << "num_transformaciones: " << num_transformaciones << endl;
 
@@ -151,10 +151,10 @@ void Server::read_from_client_2()
 
     cout << "(2) bytes: " << tcpSocket->bytesAvailable() << endl;
 
-    if (tcpSocket->bytesAvailable() < 13)
+    if (tcpSocket->bytesAvailable() < 17)
         return;
 
-    QByteArray block = tcpSocket->read(13);
+    QByteArray block = tcpSocket->read(17);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> transform;
 
@@ -177,7 +177,7 @@ void Server::read_from_client_2()
     cout << "Caracter: " ;
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
-    cout << "time_stamp: " << transform.time_stamp << endl;
+    cout << "time_stamp: " << transform.time_stamp[0] << ", " << transform.time_stamp[1] << endl;
 
 
  //   cout << "num_transformaciones: " << num_transformaciones << endl;

@@ -8,7 +8,7 @@ struct Transform
 {
     qint32 pos;
     qint32 priority;
-    qint32 time_stamp;
+    qint32 time_stamp[2];
     quint8 c;
 
 };
