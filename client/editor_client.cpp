@@ -34,9 +34,11 @@ EditorCliente::EditorCliente(QWidget *parent)
     QStringList args = QCoreApplication::arguments();
 
     if (args.count() == 1) {
+        id_cliente = 1;
         m_label.setText(QString("Cliente 1"));
         start("127.0.0.1", 2347);
     } else {
+        id_cliente = 2;
         m_label.setText(QString("Cliente 2"));
         start(args.at(1), 2348);
         //start("127.0.0.1", 2346);
@@ -143,7 +145,10 @@ void EditorCliente::m_read() {
 
         if(transform.time_stamp[1] != time_stamps[0] && lista_local.size() > 0){
             transform_tmp = lista_local.front();
-            transform = operat_transformation(transform, transform_tmp);
+            if(id_cliente == 1)
+                transform = operat_transformation(transform, transform_tmp);
+            else
+                transform = operat_transformation(transform_tmp, transform);
         }
 
         t = t.insert(transform.pos, transform.c);

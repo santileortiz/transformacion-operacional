@@ -51,6 +51,7 @@ private:
     QString t;
     int position;
     char caracter;
+    int id_cliente;
     int time_stamps[2];
 
     //Transform lista_transformaciones[20];
