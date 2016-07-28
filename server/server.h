@@ -2,13 +2,15 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
-#include <QMutex>
+//#include <QMutex>
 
 struct Transform
 {
     qint32 pos;
-    quint8 c;
     qint32 priority;
+    qint32 time_stamp;
+    quint8 c;
+
 };
 
 class Server: public QTcpServer//QObject
@@ -19,7 +21,7 @@ public:
 
   //Server(QObject * parent = 0);
   ~Server();
-  Transform operat_transformation (Transform t1, Transform t2);
+  //Transform operat_transformation (Transform t1, Transform t2);
 public slots:
   void acceptConnection1();
   void acceptConnection2();
@@ -28,10 +30,10 @@ public slots:
   void write_to_client (Transform transform, int cli_number);
 private:
   uint num_clients;
-  uint num_transformaciones;
+  //uint num_transformaciones;
   Transform transform_client1;
   Transform transform_client2;
-  QMutex mutex;
+  //QMutex mutex;
   QTcpServer server1;
   QTcpServer server2;
   QTcpSocket* clients[2];

@@ -1,26 +1,27 @@
 // server.cc
 #include "server.h"
-#include "mythread.h"
+//#include "mythread.h"
 #include <iostream>
+#include <QTest>
 
 using namespace std;
 
 QDataStream &operator<<(QDataStream &out, const Transform &transform)
 {
-    out << transform.pos << transform.c << transform.priority;
+    out << transform.pos << transform.c << transform.priority << transform.time_stamp;
     return out;
 }
 
 QDataStream &operator>>(QDataStream &in, Transform &transform)
 {
-    in >> transform.pos >> transform.c >> transform.priority;
+    in >> transform.pos >> transform.c >> transform.priority >> transform.time_stamp;
     return in;
 }
 
 Server::Server(QObject* parent): QTcpServer(parent)//QObject(parent)
 {
   num_clients = 0;
-  num_transformaciones = 0;
+  //num_transformaciones = 0;
 
   connect(&server1, SIGNAL(newConnection()),
     this, SLOT(acceptConnection1()));
@@ -45,6 +46,8 @@ void Server::acceptConnection1()
   QString port_s = QString::number(port);
   cout << "Puerto: ";
   cout << port << endl;
+  //cout << "time_stamps: " << time_stamps[0] << ", " << time_stamps[1] << endl;
+  //cout << "num_clients: " << num_clients << endl;
 
   connect(clients[1], SIGNAL(readyRead()),
     this, SLOT(read_from_client_1()));
@@ -58,6 +61,9 @@ void Server::acceptConnection2()
   QString port_s = QString::number(port);
   cout << "Puerto: ";
   cout << port << endl;
+  //cout << "time_stamps: " << time_stamps[0] << ", " << time_stamps[1] << endl;
+  //cout << "num_clients: " << num_clients << endl;
+
 
   connect(clients[2], SIGNAL(readyRead()),
     this, SLOT(read_from_client_2()));
@@ -69,8 +75,9 @@ void Server::write_to_client (Transform transform, int cli_number) {
     sendStream << transform;
     clients[cli_number]->write(block);
 }
-
+/*
 Transform Server::operat_transformation (Transform t1, Transform t2){
+    cout << "En Transformacion" << endl;
     Transform res;
     res.c = t1.c;
     res.priority = t1.priority;
@@ -85,7 +92,7 @@ Transform Server::operat_transformation (Transform t1, Transform t2){
     }
     return res;
 }
-
+*/
 void Server::read_from_client_1()
 {
     if (num_clients !=2)
@@ -96,39 +103,42 @@ void Server::read_from_client_1()
 
     cout << "(1) bytes: " << tcpSocket->bytesAvailable() << endl;
 
-    if (tcpSocket->bytesAvailable() < 9)
+    if (tcpSocket->bytesAvailable() < 13)
         return;
 
-    QByteArray block = tcpSocket->read(9);
+    QByteArray block = tcpSocket->read(13);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> transform;
 
     transform_client1 = transform;
 
-    mutex.lock();
-    num_transformaciones++;
-    mutex.unlock();
+    //mutex.lock();
+    //num_transformaciones++;
+    //mutex.unlock();
 
     transform.priority = 2;
 
-    int cont = 0;
-    while(cont < /*9999999*/INT_MAX){
-        cont++;
-    }
-
+    //QTest::qSleep(2000);
+/*
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client1, transform_client2);
     }
-
+*/
     cout << "Posicion: " ;
     cout << transform.pos << endl;
     cout << "Caracter: " ;
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
+    cout << "time_stamp: " << transform.time_stamp << endl;
+
+    //cout << "num_transformaciones: " << num_transformaciones << endl;
 
     write_to_client (transform, 2);
-
+/*
+    mutex.lock();
     num_transformaciones--;
+    mutex.unlock();
+*/
 }
 
 void Server::read_from_client_2()
@@ -141,48 +151,53 @@ void Server::read_from_client_2()
 
     cout << "(2) bytes: " << tcpSocket->bytesAvailable() << endl;
 
-    if (tcpSocket->bytesAvailable() < 9)
+    if (tcpSocket->bytesAvailable() < 13)
         return;
 
-    QByteArray block = tcpSocket->read(9);
+    QByteArray block = tcpSocket->read(13);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> transform;
 
     transform_client2 = transform;
-
+/*
     mutex.lock();
     num_transformaciones++;
     mutex.unlock();
-
+*/
     transform.priority = 2;
 
-    int cont = 0;
-    while(cont < /*9999999*/INT_MAX){
-        cont++;
-    }
-
+ //   QTest::qSleep(2000);
+/*
     if(num_transformaciones == 2){
         transform = operat_transformation(transform_client2, transform_client1);
     }
-
+*/
     cout << "Posicion: " ;
     cout << transform.pos << endl;
     cout << "Caracter: " ;
     cout << transform.c << endl;
     cout << "Prioridad: " << transform.priority << endl;
+    cout << "time_stamp: " << transform.time_stamp << endl;
+
+
+ //   cout << "num_transformaciones: " << num_transformaciones << endl;
 
     write_to_client (transform, 1);
-
+/*
+    mutex.lock();
     num_transformaciones--;
+    mutex.unlock();
+*/
 }
 
-
+/*
 void Server::incomingConnections(int socketDescriptor)    //Incoming connections
 {
-  MyThread *thread = new MyThread(socketDescriptor,this);
+  //MyThread *thread = new MyThread(socketDescriptor,this);
 
-  connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+  //connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
   //Start a new thread for the connection
-  thread->start();    //Which will cause the run() function
+  //thread->start();    //Which will cause the run() function
 }
+*/

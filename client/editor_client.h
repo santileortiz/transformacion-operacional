@@ -12,6 +12,14 @@
 #include <QObject>
 #include <QTcpSocket>
 
+struct Transform
+{
+    qint32 pos;
+    qint32 priority;
+    qint32 time_stamp;
+    quint8 c;
+};
+
 class EditorCliente : public QWidget
 {
     Q_OBJECT
@@ -22,6 +30,8 @@ public:
 
     void start(QString address, quint16 port);
     void sendMessage(char *operacion);
+    Transform operat_transformation (Transform t1, Transform t2);
+
     QTcpSocket sock;
 
 private slots:
@@ -41,6 +51,14 @@ private:
     QString t;
     int position;
     char caracter;
+    int time_stamps[2];
+
+    //Transform lista_transformaciones[20];
+    std::list<Transform> lista_local;
+    std::list<Transform> lista_transformaciones;
+
+    Transform buscaEnLista(std::list<Transform>, Transform);
+    //void push(Transform);
 };
 
 #endif // WIDGET_H
