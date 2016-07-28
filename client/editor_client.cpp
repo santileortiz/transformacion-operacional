@@ -130,7 +130,6 @@ void EditorCliente::m_read() {
     cout << "time_stamp: " << transform.time_stamp << endl;
 
     //cout << "*****Caracter: " << caracter << endl;
-
     t = t.insert(transform.pos, transform.c);
 
     QTextCursor tmp_cursor = m_textEdit.textCursor();
