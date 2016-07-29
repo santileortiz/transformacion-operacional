@@ -7,15 +7,15 @@
 
 using namespace std;
 
-QDataStream &operator<<(QDataStream &out, const Transform &transform)
+QDataStream &operator<<(QDataStream &out, const Operation &operation)
 {
-    out << transform.pos << transform.c << transform.priority << transform.time_stamp[0] << transform.time_stamp[1];
+    out << operation.pos << operation.c << operation.priority << operation.time_stamp[0] << operation.time_stamp[1];
     return out;
 }
 
-QDataStream &operator>>(QDataStream &in, Transform &transform)
+QDataStream &operator>>(QDataStream &in, Operation &operation)
 {
-    in >> transform.pos >> transform.c >> transform.priority >> transform.time_stamp[0] >> transform.time_stamp[1];
+    in >> operation.pos >> operation.c >> operation.priority >> operation.time_stamp[0] >> operation.time_stamp[1];
     return in;
 }
 
@@ -59,7 +59,7 @@ void EditorCliente::onTextChanged(){
     if(writing_to_box)
         return;
 
-    Transform new_transform;
+    Operation new_operation;
 
     QByteArray block;
     QDataStream sendStream(&block, QIODevice::ReadWrite);
@@ -67,23 +67,23 @@ void EditorCliente::onTextChanged(){
     t = m_textEdit.toPlainText();
     time_stamps[0]++;
 
-    new_transform.pos = m_textEdit.textCursor().positionInBlock() - 1;
-    new_transform.c = t[new_transform.pos].toLatin1();
-    new_transform.priority = 0;
-    new_transform.time_stamp[0] = time_stamps[0];
-    new_transform.time_stamp[1] = time_stamps[1];
-    lista_local.push_front(new_transform);
+    new_operation.pos = m_textEdit.textCursor().positionInBlock() - 1;
+    new_operation.c = t[new_operation.pos].toLatin1();
+    new_operation.priority = id_cliente;
+    new_operation.time_stamp[0] = time_stamps[0];
+    new_operation.time_stamp[1] = time_stamps[1];
+    lista_local.push_front(new_operation);
 
-    sendStream << new_transform;
+    sendStream << new_operation;
     sock.write(block);
 
     cout << "Paquete enviado " << endl;
     cout << "Posicion: " ;
-    cout << new_transform.pos << endl;
+    cout << new_operation.pos << endl;
     cout << "Caracter: " ;
-    cout << new_transform.c << endl;
-    cout << "Prioridad: " << new_transform.priority << endl;
-    //cout << "time_stamps: " << new_transform.time_stamp << ", " << time_stamps[1] << endl;
+    cout << new_operation.c << endl;
+    cout << "Prioridad: " << new_operation.priority << endl;
+    //cout << "time_stamps: " << new_operation.time_stamp << ", " << time_stamps[1] << endl;
 }
 
 void EditorCliente::onCursorPositionChanged(){
@@ -96,8 +96,8 @@ void EditorCliente::start(QString address, quint16 port)
 }
 
 void EditorCliente::m_read() {
-    Transform transform;
-    Transform transform_tmp;
+    Operation operation;
+    Operation operation_tmp;
     QTcpSocket *tcpSocket = (QTcpSocket*)sender();
 
     if (tcpSocket->bytesAvailable() < 17) {
@@ -106,36 +106,36 @@ void EditorCliente::m_read() {
 
     QByteArray block = tcpSocket->read(17);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
-    sendStream >> transform;
+    sendStream >> operation;
 
     // Verifica que el elemento que entro sea valido
-    if(transform.time_stamp[0] - time_stamps[1] != 1){
-        // Si la transformacion no es la siguiente que debe ser aplicada busca
+    if(operation.time_stamp[0] - time_stamps[1] != 1){
+        // Si la operationacion no es la siguiente que debe ser aplicada busca
         // en la lista por la existencia de esta
-        //transform_tmp = buscaEnLista(lista_transformaciones, transform);
-        // Agrega la transformacion actual a la lista
-        lista_transformaciones.push_front(transform);
+        //operation_tmp = buscaEnLista(lista_operaciones, operation);
+        // Agrega la operationacion actual a la lista
+        lista_operaciones.push_front(operation);
         return;
 
         // Si no encuentra el elemento en la lista regresa
-        //if(transform_tmp.priority == -1){
+        //if(operation_tmp.priority == -1){
          //   return;
         //}
 
-        //transform = transform_tmp;
+        //operation = operation_tmp;
     }//else{
-    //    transform_tmp = transform;
+    //    operation_tmp = operation;
     //}
-    //transform_tmp = buscaEnLista(lista_transformaciones, transform);
+    //operation_tmp = buscaEnLista(lista_operaciones, operation);
 
     cout << "------------------------------------------" << endl;
     cout << "Respuesta del servidor:"<< endl;
     cout << "Posicion: " ;
-    cout << transform.pos << endl;
+    cout << operation.pos << endl;
     cout << "Caracter: " ;
-    cout << transform.c << endl;
-    cout << "Prioridad: " << transform.priority << endl;
-    cout << "time_stamp: " << transform.time_stamp[0] << ", " << transform.time_stamp[1] << endl;
+    cout << operation.c << endl;
+    cout << "Prioridad: " << operation.priority << endl;
+    cout << "time_stamp: " << operation.time_stamp[0] << ", " << operation.time_stamp[1] << endl;
 
     do{
         //cout << "*****Caracter: " << caracter << endl;
@@ -144,16 +144,20 @@ void EditorCliente::m_read() {
         cout << "------------------------------------------" << endl;
         // Se necesita comparar que el times_stamp[0] sea igual al local del otro cliente
 
-        if(transform.time_stamp[1] != time_stamps[0] && lista_local.size() > 0){
-            transform_tmp = lista_local.front();
-            transform = operat_transformation(transform_tmp, transform);
+        if(operation.time_stamp[1] != time_stamps[0] && lista_local.size() > 0){
+            operation_tmp = lista_local.front();
+            operation = operat_transformation(operation, operation_tmp);
         }
 
-        t = t.insert(transform.pos, transform.c);
+        if (operation.priority == -1) {
+            return;
+        }
+
+        t = t.insert(operation.pos, operation.c);
 
         QTextCursor tmp_cursor = m_textEdit.textCursor();
         int cur_position;
-        if (transform.pos < m_textEdit.textCursor().position())
+        if (operation.pos < m_textEdit.textCursor().position())
             cur_position = m_textEdit.textCursor().position() + 1;
         else
             cur_position = m_textEdit.textCursor().position();
@@ -168,31 +172,31 @@ void EditorCliente::m_read() {
 
         //lista_local.pop_front();
 
-        transform = buscaEnLista(lista_transformaciones, time_stamps[0]);
+        operation = buscaEnLista(lista_operaciones, time_stamps[0]);
 
-    }while(transform.priority != -1);
+    }while(operation.priority != -1);
 
-    //cout << "time_stamp recibido: " << transform.time_stamp << endl;
+    //cout << "time_stamp recibido: " << operation.time_stamp << endl;
     //cout << "time_stamps: " << time_stamps[0] << ", " << time_stamps[1] << endl;
 
 
 }
 
-Transform EditorCliente::buscaEnLista(std::list<Transform> lista, int time_stamp){
+Operation EditorCliente::buscaEnLista(std::list<Operation> lista, int time_stamp){
     //cout << "Elementos en la lista" << endl;
-    Transform new_transform;
-    new_transform.priority = -1;
+    Operation new_operation;
+    new_operation.priority = -1;
 
-    for (std::list<Transform>::iterator it=lista.begin(); it != lista.end(); ++it){
+    for (std::list<Operation>::iterator it=lista.begin(); it != lista.end(); ++it){
         //cout << (*it).c << " ";
         if((*it).time_stamp[1] == time_stamp){
-            new_transform = *it;
+            new_operation = *it;
             lista.erase(it);
             break;
         }
     }
 
-    return new_transform;
+    return new_operation;
 }
 
 void EditorCliente::keyReleaseEvent(QKeyEvent *event){
@@ -207,17 +211,17 @@ void EditorCliente::keyReleaseEvent(QKeyEvent *event){
     //cout << "Tecla soltada: " << event->key() << endl;
 }
 
-Transform EditorCliente::operat_transformation (Transform t1, Transform t2){
-    cout << "En Transformacion" << endl;
-    Transform res;
-    res.c = t1.c;
-    res.priority = t1.priority;
-    if (t1.pos < t2.pos ||
-            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority<t2.priority)) {
-        res.pos = t1.pos;
-    } else if (t1.pos > t2.pos ||
-            (t1.pos==t2.pos && t1.c!=t2.c && t1.priority>t2.priority)) {
-        res.pos = t1.pos+1;
+Operation EditorCliente::operat_transformation(Operation o1, Operation o2){
+    cout << "En Operationacion" << endl;
+    Operation res;
+    res.c = o1.c;
+    res.priority = o1.priority;
+    if (o1.pos < o2.pos ||
+            (o1.pos==o2.pos && o1.c!=o2.c && o1.priority<o2.priority)) {
+        res.pos = o1.pos;
+    } else if (o1.pos > o2.pos ||
+            (o1.pos==o2.pos && o1.c!=o2.c && o1.priority>o2.priority)) {
+        res.pos = o1.pos+1;
     } else {
         res.priority = -1;
     }

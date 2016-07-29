@@ -12,7 +12,7 @@
 #include <QObject>
 #include <QTcpSocket>
 
-struct Transform
+struct Operation
 {
     qint32 pos;
     qint32 priority;
@@ -30,7 +30,7 @@ public:
 
     void start(QString address, quint16 port);
     void sendMessage(char *operacion);
-    Transform operat_transformation (Transform t1, Transform t2);
+    Operation operat_transformation(Operation o1, Operation o2);
 
     QTcpSocket sock;
 
@@ -57,12 +57,12 @@ private:
     int id_cliente;
     int time_stamps[2];
 
-    //Transform lista_transformaciones[20];
-    std::list<Transform> lista_local;
-    std::list<Transform> lista_transformaciones;
+    //Operation lista_operaciones[20];
+    std::list<Operation> lista_local;
+    std::list<Operation> lista_operaciones;
 
-    Transform buscaEnLista(std::list<Transform>, int);
-    //void push(Transform);
+    Operation buscaEnLista(std::list<Operation>, int);
+    //void push(Operation);
 };
 
 #endif // WIDGET_H
