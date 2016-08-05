@@ -28,19 +28,18 @@ public:
     EditorCliente(QWidget *parent = 0);
     ~EditorCliente();
 
-    void start(QString address, quint16 port);
     void sendMessage(char *operacion);
     Operation operat_transformation(Operation o1, Operation o2);
 
-    QTcpSocket sock;
+    QTcpSocket *sock;
 
 private slots:
     void onTextChanged();
     void onCursorPositionChanged();
-    //void m_read();
 
 public slots:
     void m_read();
+    void acceptConnection();
 
 protected:
     virtual void keyReleaseEvent(QKeyEvent * event);
@@ -63,6 +62,8 @@ private:
 
     Operation buscaEnLista(std::list<Operation>, int);
     //void push(Operation);
+
+    QTcpServer server;
 };
 
 #endif // WIDGET_H

@@ -28,7 +28,6 @@ EditorCliente::EditorCliente(QWidget *parent)
 
     connect(&m_textEdit, SIGNAL(textChanged()), this, SLOT(onTextChanged()));
     connect(&m_textEdit, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorPositionChanged()));
-    connect(&sock, SIGNAL(readyRead()), this, SLOT(m_read()));
 
     m_cursor = m_textEdit.textCursor();
 
@@ -36,13 +35,16 @@ EditorCliente::EditorCliente(QWidget *parent)
 
     if (args.count() == 1) {
         id_cliente = 1;
+        connect(&server, SIGNAL(newConnection()), this, SLOT(acceptConnection()));
+        server.listen(QHostAddress::Any, 2347);
         m_label.setText(QString("Cliente 1"));
-        start("127.0.0.1", 2347);
     } else {
         id_cliente = 2;
         m_label.setText(QString("Cliente 2"));
-        start(args.at(1), 2348);
-        //start("127.0.0.1", 2346);
+        QHostAddress addr(args.at(1));
+        sock = new QTcpSocket;
+        sock->connectToHost(addr, 2347);
+        connect(sock, SIGNAL(readyRead()), this, SLOT(m_read()));
     }
 
     m_layout.addWidget(&m_textEdit);
@@ -51,8 +53,18 @@ EditorCliente::EditorCliente(QWidget *parent)
     setLayout(&m_layout);
 }
 
+void EditorCliente::acceptConnection()
+{
+  sock = server.nextPendingConnection();
+  quint16 port = sock->localPort();
+  cout << "Puerto: ";
+  cout << port << endl;
+  connect(sock, SIGNAL(readyRead()), this, SLOT(m_read()));
+}
+
 EditorCliente::~EditorCliente(){
-  sock.close();
+  sock->close();
+  server.close();
 }
 
 void EditorCliente::onTextChanged(){
@@ -75,7 +87,7 @@ void EditorCliente::onTextChanged(){
     lista_local.push_front(new_operation);
 
     sendStream << new_operation;
-    sock.write(block);
+    sock->write(block);
 
     cout << "Paquete enviado " << endl;
     cout << "Posicion: " ;
@@ -87,12 +99,6 @@ void EditorCliente::onTextChanged(){
 }
 
 void EditorCliente::onCursorPositionChanged(){
-}
-
-void EditorCliente::start(QString address, quint16 port)
-{
-  QHostAddress addr(address);
-  sock.connectToHost(addr, port);
 }
 
 void EditorCliente::m_read() {

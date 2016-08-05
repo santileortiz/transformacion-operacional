@@ -2,5 +2,4 @@
 moc_*
 *.swp
 *.o
-client/client
-server/server
+client
