@@ -9,20 +9,19 @@ using namespace std;
 
 QDataStream &operator<<(QDataStream &out, const Operation &operation)
 {
-    out << operation.pos << operation.c << operation.priority << operation.time_stamp[0] << operation.time_stamp[1];
+    out << operation.pos << operation.c << operation.priority << operation.time_stamp[0] << operation.time_stamp[1] << operation.type;
     return out;
 }
 
 QDataStream &operator>>(QDataStream &in, Operation &operation)
 {
-    in >> operation.pos >> operation.c >> operation.priority >> operation.time_stamp[0] >> operation.time_stamp[1];
+    in >> operation.pos >> operation.c >> operation.priority >> operation.time_stamp[0] >> operation.time_stamp[1] >> operation.type;
     return in;
 }
 
 EditorCliente::EditorCliente(QWidget *parent)
     : QWidget(parent)
 {
-    writing_to_box = false;
     time_stamps[0] = 0;
     time_stamps[1] = 0;
 
@@ -30,8 +29,11 @@ EditorCliente::EditorCliente(QWidget *parent)
     connect(&m_textEdit, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorPositionChanged()));
 
     m_cursor = m_textEdit.textCursor();
+    ignored_msgs = 0;
 
     QStringList args = QCoreApplication::arguments();
+
+    setFocusPolicy(Qt::StrongFocus);
 
     if (args.count() == 1) {
         id_cliente = 1;
@@ -68,124 +70,112 @@ EditorCliente::~EditorCliente(){
 }
 
 void EditorCliente::onTextChanged(){
-    if(writing_to_box)
+    if(writing_to_box) {
         return;
+    }
 
-    Operation new_operation;
-
-    QByteArray block;
-    QDataStream sendStream(&block, QIODevice::ReadWrite);
-
-    t = m_textEdit.toPlainText();
-    time_stamps[0]++;
-
-    new_operation.pos = m_textEdit.textCursor().positionInBlock() - 1;
-    new_operation.c = t[new_operation.pos].toLatin1();
-    new_operation.priority = id_cliente;
-    new_operation.time_stamp[0] = time_stamps[0];
-    new_operation.time_stamp[1] = time_stamps[1];
-    lista_local.push_front(new_operation);
-
-    sendStream << new_operation;
-    sock->write(block);
-
-    cout << "Paquete enviado " << endl;
-    cout << "Posicion: " ;
-    cout << new_operation.pos << endl;
-    cout << "Caracter: " ;
-    cout << new_operation.c << endl;
-    cout << "Prioridad: " << new_operation.priority << endl;
-    //cout << "time_stamps: " << new_operation.time_stamp << ", " << time_stamps[1] << endl;
+    if(m_textEdit.is_backspace) {
+        send_operation (2);
+    } else {
+        send_operation(1);
+    }
 }
 
 void EditorCliente::onCursorPositionChanged(){
 }
 
-void EditorCliente::m_read() {
-    Operation operation;
-    Operation operation_tmp;
-    QTcpSocket *tcpSocket = (QTcpSocket*)sender();
+void print_operation (Operation op) {
+    if (op.type == 1) {
+        cout << "Tipo: ins" << endl;
+    } else {
+        cout << "Tipo: del" << endl;
+    }
+    cout << "Posicion: ";
+    cout << op.pos << endl;
+    cout << "Caracter: " ;
+    cout << op.c << endl;
+    cout << "Prioridad: " << op.priority << endl;
+    cout << "time_stamp: " << op.time_stamp[0] << ", " << op.time_stamp[1] << endl;
+    cout << "------------------------------------------" << endl;
+}
 
-    if (tcpSocket->bytesAvailable() < 17) {
+void EditorCliente::apply_operation (Operation operation) {
+    if (operation.priority == -1) {
         return;
     }
 
-    QByteArray block = tcpSocket->read(17);
+    qint8 cur_correct;
+    if (operation.type == 1) {
+        t = t.insert(operation.pos, operation.c);
+        cur_correct = 1;
+    } else {
+        t = t.remove(operation.pos, 1);
+        cur_correct = -1;
+    }
+
+    QTextCursor tmp_cursor = m_textEdit.textCursor();
+    int cur_position;
+    if (operation.pos < m_textEdit.textCursor().position())
+        cur_position = m_textEdit.textCursor().position() + cur_correct;
+    else
+        cur_position = m_textEdit.textCursor().position();
+
+    writing_to_box = true;
+    m_textEdit.setText(t);
+    writing_to_box = false;
+
+    tmp_cursor.setPosition(cur_position);
+    m_textEdit.setTextCursor(tmp_cursor);
+}
+
+Operation read_operation (QTcpSocket *sender) {
+    Operation operation;
+
+    if (sender->bytesAvailable() < 18) {
+        operation.priority = -1;
+        return operation;
+    }
+
+    QByteArray block = sender->read(18);
     QDataStream sendStream(&block, QIODevice::ReadWrite);
     sendStream >> operation;
+    return operation;
+}
 
-    // Verifica que el elemento que entro sea valido
-    if(operation.time_stamp[0] - time_stamps[1] != 1){
-        // Si la operationacion no es la siguiente que debe ser aplicada busca
-        // en la lista por la existencia de esta
-        //operation_tmp = buscaEnLista(lista_operaciones, operation);
-        // Agrega la operationacion actual a la lista
-        lista_operaciones.push_front(operation);
+void EditorCliente::m_read() {
+    Operation operation;
+    if(m_textEdit.ignore_incoming) {
+        ignored_msgs++;
         return;
+    }
 
-        // Si no encuentra el elemento en la lista regresa
-        //if(operation_tmp.priority == -1){
-         //   return;
-        //}
+    while(ignored_msgs>=0) {
+        operation = read_operation((QTcpSocket*)sender());
+        cout << "Operacion recibida:" << endl;
+        print_operation (operation);
 
-        //operation = operation_tmp;
-    }//else{
-    //    operation_tmp = operation;
-    //}
-    //operation_tmp = buscaEnLista(lista_operaciones, operation);
-
-    cout << "------------------------------------------" << endl;
-    cout << "Respuesta del servidor:"<< endl;
-    cout << "Posicion: " ;
-    cout << operation.pos << endl;
-    cout << "Caracter: " ;
-    cout << operation.c << endl;
-    cout << "Prioridad: " << operation.priority << endl;
-    cout << "time_stamp: " << operation.time_stamp[0] << ", " << operation.time_stamp[1] << endl;
-
-    do{
-        //cout << "*****Caracter: " << caracter << endl;
-        cout << "lista_local size: " << lista_local.size() << endl;
-        cout << "time_stamp locales: " << time_stamps[0] << ", " << time_stamps[1] << endl;
-        cout << "------------------------------------------" << endl;
-        // Se necesita comparar que el times_stamp[0] sea igual al local del otro cliente
-
-        if(operation.time_stamp[1] != time_stamps[0] && lista_local.size() > 0){
-            operation_tmp = lista_local.front();
-            operation = operat_transformation(operation, operation_tmp);
+        while (lista_local.size()!=0 && lista_local.front().time_stamp[0] <= operation.time_stamp[1]) {
+            lista_local.pop_front();
         }
 
-        if (operation.priority == -1) {
-            return;
+        std::list<Operation>::iterator it=lista_local.begin();
+        while (it!=lista_local.end() && (*it).time_stamp[0] > operation.time_stamp[1]) {
+            cout << "lista_local size: " << lista_local.size() << endl;
+            cout << "time_stamp locales: " << time_stamps[0] << ", " << time_stamps[1] << endl;
+            cout << "------------------------------------------" << endl;
+
+            operation = operat_transformation(operation, *it);
+            *it = operat_transformation(*it, operation);
+            ++it;
         }
 
-        t = t.insert(operation.pos, operation.c);
-
-        QTextCursor tmp_cursor = m_textEdit.textCursor();
-        int cur_position;
-        if (operation.pos < m_textEdit.textCursor().position())
-            cur_position = m_textEdit.textCursor().position() + 1;
-        else
-            cur_position = m_textEdit.textCursor().position();
-
-        writing_to_box = true;
-        m_textEdit.setText(t);
-        writing_to_box = false;
-
-        tmp_cursor.setPosition(cur_position);
-        m_textEdit.setTextCursor(tmp_cursor);
+        apply_operation(operation);
         time_stamps[1]++;
 
-        //lista_local.pop_front();
-
-        operation = buscaEnLista(lista_operaciones, time_stamps[0]);
-
-    }while(operation.priority != -1);
-
-    //cout << "time_stamp recibido: " << operation.time_stamp << endl;
-    //cout << "time_stamps: " << time_stamps[0] << ", " << time_stamps[1] << endl;
-
-
+        if (ignored_msgs==0)
+            break;
+        ignored_msgs--;
+    }
 }
 
 Operation EditorCliente::buscaEnLista(std::list<Operation> lista, int time_stamp){
@@ -205,23 +195,45 @@ Operation EditorCliente::buscaEnLista(std::list<Operation> lista, int time_stamp
     return new_operation;
 }
 
-void EditorCliente::keyReleaseEvent(QKeyEvent *event){
+void EditorCliente::send_operation (quint8 type) {
+    Operation new_operation;
 
-    // Backspace: 16777219
-    // Suprimir: 16777223
-    if(event->key() == 16777219)
-        cout << "Se presiono Backspace" << endl;
-    else if(event->key() == 16777223)
-        cout << "Se presiono suprimir" << endl;
+    QByteArray block;
+    QDataStream sendStream(&block, QIODevice::ReadWrite);
 
-    //cout << "Tecla soltada: " << event->key() << endl;
+    t = m_textEdit.toPlainText();
+    time_stamps[0]++;
+
+    if (type == 1) {
+        new_operation.pos = m_textEdit.textCursor().positionInBlock() - 1;
+    } else {
+        new_operation.pos = m_textEdit.textCursor().positionInBlock();
+    }
+    new_operation.c = t[new_operation.pos].toLatin1();
+    new_operation.priority = id_cliente;
+    new_operation.time_stamp[0] = time_stamps[0];
+    new_operation.time_stamp[1] = time_stamps[1];
+    new_operation.type = type;
+    lista_local.push_back(new_operation);
+
+    sendStream << new_operation;
+    sock->write(block);
+
+    cout << "Operacion enviada:" << endl;
+    print_operation (new_operation);
 }
 
 Operation EditorCliente::operat_transformation(Operation o1, Operation o2){
-    cout << "En Operationacion" << endl;
+    cout << "Transformando o1:" << endl;
+    print_operation (o1);
+    cout << "Transformando o2:" << endl;
+    print_operation (o2);
     Operation res;
     res.c = o1.c;
     res.priority = o1.priority;
+    res.type = o1.type;
+    res.time_stamp[0] = o1.time_stamp[0];
+    res.time_stamp[1] = o1.time_stamp[1];
     if (o1.pos < o2.pos ||
             (o1.pos==o2.pos && o1.c!=o2.c && o1.priority<o2.priority)) {
         res.pos = o1.pos;
@@ -231,5 +243,7 @@ Operation EditorCliente::operat_transformation(Operation o1, Operation o2){
     } else {
         res.priority = -1;
     }
+    cout << "En:" << endl;
+    print_operation (res);
     return res;
 }

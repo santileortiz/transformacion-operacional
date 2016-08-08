@@ -2,7 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
-#include <QTextEdit>
+#include <MyTextEdit.h>
 #include <QTextCursor>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -18,6 +18,7 @@ struct Operation
     qint32 priority;
     qint32 time_stamp[2];
     quint8 c;
+    quint8 type;
 };
 
 class EditorCliente : public QWidget
@@ -36,31 +37,31 @@ public:
 private slots:
     void onTextChanged();
     void onCursorPositionChanged();
+    void send_operation (quint8 type);
 
 public slots:
     void m_read();
     void acceptConnection();
 
-protected:
-    virtual void keyReleaseEvent(QKeyEvent * event);
-
 private:
     bool writing_to_box;
     QTextCursor m_cursor;
     QVBoxLayout m_layout;
-    QTextEdit m_textEdit;
+    MyTextEdit m_textEdit;
     QLabel m_label;
     QString t;
     int position;
     char caracter;
     int id_cliente;
     int time_stamps[2];
+    int ignored_msgs;
 
     //Operation lista_operaciones[20];
     std::list<Operation> lista_local;
     std::list<Operation> lista_operaciones;
 
     Operation buscaEnLista(std::list<Operation>, int);
+    void apply_operation (Operation operation);
     //void push(Operation);
 
     QTcpServer server;
