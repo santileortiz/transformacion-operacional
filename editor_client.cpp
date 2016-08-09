@@ -149,7 +149,9 @@ void EditorCliente::m_read() {
         return;
     }
 
-    while(ignored_msgs>=0) {
+    //while(ignored_msgs>=0) { // Descomentar esta línea para depurar
+                               // (y comentar la siguiente)
+    while( ((QTcpSocket*)sender())->bytesAvailable() >= 18) {
         operation = read_operation((QTcpSocket*)sender());
         cout << "Operacion recibida:" << endl;
         print_operation (operation);
@@ -176,23 +178,6 @@ void EditorCliente::m_read() {
             break;
         ignored_msgs--;
     }
-}
-
-Operation EditorCliente::buscaEnLista(std::list<Operation> lista, int time_stamp){
-    //cout << "Elementos en la lista" << endl;
-    Operation new_operation;
-    new_operation.priority = -1;
-
-    for (std::list<Operation>::iterator it=lista.begin(); it != lista.end(); ++it){
-        //cout << (*it).c << " ";
-        if((*it).time_stamp[1] == time_stamp){
-            new_operation = *it;
-            lista.erase(it);
-            break;
-        }
-    }
-
-    return new_operation;
 }
 
 void EditorCliente::send_operation (quint8 type) {
@@ -234,15 +219,39 @@ Operation EditorCliente::operat_transformation(Operation o1, Operation o2){
     res.type = o1.type;
     res.time_stamp[0] = o1.time_stamp[0];
     res.time_stamp[1] = o1.time_stamp[1];
-    if (o1.pos < o2.pos ||
-            (o1.pos==o2.pos && o1.c!=o2.c && o1.priority<o2.priority)) {
-        res.pos = o1.pos;
-    } else if (o1.pos > o2.pos ||
-            (o1.pos==o2.pos && o1.c!=o2.c && o1.priority>o2.priority)) {
-        res.pos = o1.pos+1;
+
+    if (o1.type==1 && o2.type==1) {
+        if (o1.pos < o2.pos ||
+                (o1.pos==o2.pos && o1.c!=o2.c && o1.priority<o2.priority)) {
+            res.pos = o1.pos;
+        } else if (o1.pos > o2.pos ||
+                (o1.pos==o2.pos && o1.c!=o2.c && o1.priority>o2.priority)) {
+            res.pos = o1.pos+1;
+        } else {
+            res.priority = -1;
+        }
+    } else if (o1.type==1 && o2.type==2) {
+        if (o1.pos < o2.pos) {
+            res.pos = o1.pos;
+        } else {
+            res.pos = o1.pos-1;
+        }
+    } else if (o1.type==2 && o2.type==1) {
+        if (o1.pos < o2.pos) {
+            res.pos = o1.pos;
+        } else {
+            res.pos = o1.pos+1;
+        }
     } else {
-        res.priority = -1;
+        if (o1.pos < o2.pos) {
+            res.pos = o1.pos;
+        } if (o1.pos > o2.pos){
+            res.pos = o1.pos-1;
+        } else {
+            res.priority = -1;
+        }
     }
+
     cout << "En:" << endl;
     print_operation (res);
     return res;
