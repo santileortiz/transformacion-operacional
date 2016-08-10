@@ -29,7 +29,6 @@ EditorCliente::EditorCliente(QWidget *parent)
     connect(&m_textEdit, SIGNAL(cursorPositionChanged()), this, SLOT(onCursorPositionChanged()));
 
     m_cursor = m_textEdit.textCursor();
-    ignored_msgs = 0;
 
     QStringList args = QCoreApplication::arguments();
 
@@ -145,12 +144,9 @@ Operation read_operation (QTcpSocket *sender) {
 void EditorCliente::m_read() {
     Operation operation;
     if(m_textEdit.ignore_incoming) {
-        ignored_msgs++;
         return;
     }
 
-    //while(ignored_msgs>=0) { // Descomentar esta línea para depurar
-                               // (y comentar la siguiente)
     while( ((QTcpSocket*)sender())->bytesAvailable() >= 18) {
         operation = read_operation((QTcpSocket*)sender());
         cout << "Operacion recibida:" << endl;
@@ -161,11 +157,10 @@ void EditorCliente::m_read() {
         }
 
         std::list<Operation>::iterator it=lista_local.begin();
+        cout << "lista_local size: " << lista_local.size() << endl;
+        cout << "time_stamp locales: " << time_stamps[0] << ", " << time_stamps[1] << endl;
+        cout << "------------------------------------------" << endl;
         while (it!=lista_local.end() && (*it).time_stamp[0] > operation.time_stamp[1]) {
-            cout << "lista_local size: " << lista_local.size() << endl;
-            cout << "time_stamp locales: " << time_stamps[0] << ", " << time_stamps[1] << endl;
-            cout << "------------------------------------------" << endl;
-
             operation = operat_transformation(operation, *it);
             *it = operat_transformation(*it, operation);
             ++it;
@@ -173,10 +168,6 @@ void EditorCliente::m_read() {
 
         apply_operation(operation);
         time_stamps[1]++;
-
-        if (ignored_msgs==0)
-            break;
-        ignored_msgs--;
     }
 }
 
@@ -203,16 +194,13 @@ void EditorCliente::send_operation (quint8 type) {
 
     sendStream << new_operation;
     sock->write(block);
+    sock->flush();
 
     cout << "Operacion enviada:" << endl;
     print_operation (new_operation);
 }
 
 Operation EditorCliente::operat_transformation(Operation o1, Operation o2){
-    cout << "Transformando o1:" << endl;
-    print_operation (o1);
-    cout << "Transformando o2:" << endl;
-    print_operation (o2);
     Operation res;
     res.c = o1.c;
     res.priority = o1.priority;
@@ -252,7 +240,14 @@ Operation EditorCliente::operat_transformation(Operation o1, Operation o2){
         }
     }
 
+// Habilita una impresión detallada de cada transformación aplicada
+#if 0
+    cout << "Transformando o1:" << endl;
+    print_operation (o1);
+    cout << "Transformando o2:" << endl;
+    print_operation (o2);
     cout << "En:" << endl;
     print_operation (res);
+#endif
     return res;
 }

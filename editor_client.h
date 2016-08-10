@@ -54,7 +54,6 @@ private:
     char caracter;
     int id_cliente;
     int time_stamps[2];
-    int ignored_msgs;
 
     //Operation lista_operaciones[20];
     std::list<Operation> lista_local;
